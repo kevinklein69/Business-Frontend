@@ -21,8 +21,9 @@ export interface Auftrag {
   id: string
   titel: string
   beschreibung?: string
+  kunde?: string
   status: 'Backlog' | 'InBearbeitung' | 'BereitFuerAbnahme' | 'Rechnungserstellung' | 'Erledigt'
-  zugewiesenAn?: string
+  zugewiesenAn: string[]
   erstelltAm: string
 }
 

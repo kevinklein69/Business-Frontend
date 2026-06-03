@@ -34,7 +34,7 @@ const statusConfig: Record<Urlaubsantrag['status'], {
   className?: string
   icon: React.ReactNode
 }> = {
-  Genehmigt: { variant: 'outline',     className: 'border-green-600 text-green-600 bg-green-600/10', icon: <CheckCircle2 className="size-4" /> },
+  Genehmigt: { variant: 'outline',     className: 'border-success text-success bg-success/10', icon: <CheckCircle2 className="size-4" /> },
   Offen:     { variant: 'outline',     icon: <Clock        className="size-4" /> },
   Abgelehnt: { variant: 'destructive', icon: <XCircle      className="size-4" /> },
 }

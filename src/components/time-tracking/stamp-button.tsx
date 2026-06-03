@@ -42,7 +42,7 @@ export function StempelButton() {
       <div
         className={cn(
           'flex items-center gap-2 text-sm font-medium',
-          isStamped ? 'text-green-600' : 'text-muted-foreground'
+          isStamped ? 'text-success' : 'text-muted-foreground'
         )}
       >
         <Timer className="size-4" />
@@ -56,7 +56,7 @@ export function StempelButton() {
           'h-16 w-48 text-base gap-2',
           isStamped
             ? 'border-destructive text-destructive hover:bg-destructive/10'
-            : 'border-green-600 text-green-600 hover:bg-green-600/10'
+            : 'border-success text-success hover:bg-success/10'
         )}
       >
         {isStamped ? (

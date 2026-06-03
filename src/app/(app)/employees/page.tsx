@@ -147,7 +147,7 @@ export default function EmployeesPage() {
                   </Avatar>
                   <span className={cn(
                     'mt-1 h-2.5 w-2.5 rounded-full ring-2 ring-background',
-                    m.hatAuftrag ? 'bg-[#415a77]' : 'bg-green-500'
+                    m.hatAuftrag ? 'bg-[#415a77]' : 'bg-success'
                   )} />
                 </div>
 
@@ -168,7 +168,7 @@ export default function EmployeesPage() {
                   {m.hatAuftrag ? (
                     <p className="text-sm font-medium text-primary">Im Einsatz</p>
                   ) : (
-                    <p className="text-sm font-medium text-green-600">Verfügbar</p>
+                    <p className="text-sm font-medium text-success">Verfügbar</p>
                   )}
                 </div>
               </CardContent>

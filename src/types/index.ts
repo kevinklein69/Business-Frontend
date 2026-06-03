@@ -1,25 +1,36 @@
-// TODO: Hier werden die API-Typen eingefügt
-// Empfehlung: Generiere diese automatisch aus dem OpenAPI-Schema des Backends
-// z.B. mit: npx openapi-typescript http://localhost:5000/swagger/v1/swagger.json -o src/types/api.d.ts
+export type Rolle = 'Admin' | 'Manager' | 'Mitarbeiter'
 
-export interface User {
+export interface Benutzer {
   id: string
-  firstName: string
-  lastName: string
+  vorname: string
+  nachname: string
   email: string
+  rolle: Rolle
+  abteilung?: string
+}
+
+export interface Stempelung {
+  id: string
+  benutzerId: string
+  eingestempeltUm: string
+  ausgestempeltUm?: string
+  dauerMinuten?: number
 }
 
 export interface Auftrag {
   id: string
   titel: string
-  beschreibung: string
-  status: string
+  beschreibung?: string
+  status: 'Backlog' | 'InBearbeitung' | 'Erledigt'
+  zugewiesenAn?: string
   erstelltAm: string
 }
 
-export interface Stempelung {
+export interface Urlaubsantrag {
   id: string
-  userId: string
-  eingestempeltAm: string
-  ausgestempeltAm: string | null
+  benutzerId: string
+  von: string
+  bis: string
+  status: 'Offen' | 'Genehmigt' | 'Abgelehnt'
+  kommentar?: string
 }

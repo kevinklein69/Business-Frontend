@@ -48,73 +48,66 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+/* ─────────────────────────────────────────────
+   Palette
+   Ink Black      #0d1b2a   text, dark buttons
+   Prussian Blue  #1b263b   sidebar, primary buttons
+   Dusk Blue      #415a77   secondary buttons, accents, badges
+   Lavender Grey  #778da9   muted / placeholder text
+   Alabaster Grey #e0e1dd   borders, light surfaces
+   Crimson Rose   #c04050   destructive / delete
+   Background     #f4f5f7   page (barely-there blue-grey)
+──────────────────────────────────────────────── */
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+:root {
+  /* Content area — light */
+  --background: #f4f5f7;
+  --foreground: #0d1b2a;
+
+  --card: #ffffff;
+  --card-foreground: #0d1b2a;
+
+  --popover: #ffffff;
+  --popover-foreground: #0d1b2a;
+
+  /* Primary buttons → Prussian Blue */
+  --primary: #1b263b;
+  --primary-foreground: #e0e1dd;
+
+  /* Secondary buttons → light blue-grey */
+  --secondary: #eef1f5;
+  --secondary-foreground: #1b263b;
+
+  --muted: #eef1f5;
+  --muted-foreground: #778da9;
+
+  /* Accent (hover bg, dropdowns) → light blue-grey */
+  --accent: #eef1f5;
+  --accent-foreground: #1b263b;
+
+  --destructive: #c04050;
+
+  --border: #dde0e5;
+  --input: #dde0e5;
+  --ring: #415a77;
+
+  --radius: 0.625rem;
+
+  --chart-1: #1b263b;
+  --chart-2: #415a77;
+  --chart-3: #778da9;
+  --chart-4: #c04050;
+  --chart-5: #0d1b2a;
+
+  /* Sidebar stays dark — the palette's signature element */
+  --sidebar: #1b263b;
+  --sidebar-foreground: #e0e1dd;
+  --sidebar-primary: #415a77;
+  --sidebar-primary-foreground: #e0e1dd;
+  --sidebar-accent: #253450;
+  --sidebar-accent-foreground: #e0e1dd;
+  --sidebar-border: #2a3a52;
+  --sidebar-ring: #415a77;
 }
 
 @layer base {
@@ -126,5 +119,6 @@
   }
   html {
     @apply font-sans;
+    font-size: 20px;
   }
 }

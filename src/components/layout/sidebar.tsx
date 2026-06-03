@@ -14,11 +14,11 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/zeiterfassung', label: 'Zeiterfassung', icon: Clock },
-  { href: '/auftraege', label: 'Aufträge', icon: ClipboardList },
-  { href: '/urlaub', label: 'Urlaub', icon: CalendarDays },
-  { href: '/mitarbeiter', label: 'Mitarbeiter', icon: Users },
-  { href: '/einstellungen', label: 'Einstellungen', icon: Settings },
+  { href: '/time-tracking', label: 'Zeiterfassung', icon: Clock },
+  { href: '/orders', label: 'Aufträge', icon: ClipboardList },
+  { href: '/vacation', label: 'Urlaub', icon: CalendarDays },
+  { href: '/employees', label: 'Mitarbeiter', icon: Users },
+  { href: '/settings', label: 'Einstellungen', icon: Settings },
 ]
 
 export function Sidebar() {

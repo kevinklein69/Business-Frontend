@@ -1,15 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { StempelButton } from '@/components/zeiterfassung/stempel-button'
-import { ClipboardList, CalendarCheck, TrendingUp } from 'lucide-react'
+import { StempelButton } from '@/components/time-tracking/stamp-button'
+import { ClipboardList, CalendarCheck, TrendingUp, Timer } from 'lucide-react'
 
 export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold">Dashboard</h1>
+      <h1 className="text-2xl font-semibold">Dashboard</h1>
 
       <Card>
         <CardHeader>
-          <CardTitle>Stempeluhr</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Timer className="size-4" />
+              Stempeluhr
+            </CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center py-4">
           <StempelButton />
@@ -26,7 +29,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">5</p>
-            <p className="text-xs text-muted-foreground mt-1">2 in Bearbeitung</p>
+            <p className="text-sm text-muted-foreground mt-1">2 in Bearbeitung</p>
           </CardContent>
         </Card>
 
@@ -39,7 +42,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">15.07</p>
-            <p className="text-xs text-muted-foreground mt-1">Genehmigt · 5 Tage</p>
+            <p className="text-sm text-muted-foreground mt-1">Genehmigt · 5 Tage</p>
           </CardContent>
         </Card>
 
@@ -47,12 +50,12 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <TrendingUp className="size-4" />
-              Überstunden diese Woche
+              Überstunden gesamt
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">+2:30</p>
-            <p className="text-xs text-muted-foreground mt-1">Sollzeit: 40:00 h</p>
+            <p className="text-sm text-muted-foreground mt-1">Zeitkonto-Saldo</p>
           </CardContent>
         </Card>
       </div>

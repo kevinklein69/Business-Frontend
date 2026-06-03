@@ -21,7 +21,7 @@ export interface Auftrag {
   id: string
   titel: string
   beschreibung?: string
-  status: 'Backlog' | 'InBearbeitung' | 'Erledigt'
+  status: 'Backlog' | 'InBearbeitung' | 'BereitFuerAbnahme' | 'Rechnungserstellung' | 'Erledigt'
   zugewiesenAn?: string
   erstelltAm: string
 }

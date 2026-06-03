@@ -50,11 +50,13 @@ export function StempelButton() {
       </div>
       <Button
         size="lg"
-        variant={isStamped ? 'outline' : 'default'}
+        variant="outline"
         onClick={handleToggle}
         className={cn(
           'h-16 w-48 text-base gap-2',
-          isStamped && 'border-destructive text-destructive hover:bg-destructive/10'
+          isStamped
+            ? 'border-destructive text-destructive hover:bg-destructive/10'
+            : 'border-green-600 text-green-600 hover:bg-green-600/10'
         )}
       >
         {isStamped ? (

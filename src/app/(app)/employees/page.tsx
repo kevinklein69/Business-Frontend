@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Search, Users, ClipboardList, CheckCircle2 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -31,16 +31,17 @@ const rolleVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
   Mitarbeiter: 'outline',
 }
 
-const avatarColors = [
-  'bg-[#415a77] text-white',
-  'bg-[#1b263b] text-white',
-  'bg-[#778da9] text-white',
-  'bg-[#253450] text-white',
+/* Each index gets a distinct strip gradient (from → to) + matching avatar bg */
+const cardThemes = [
+  { strip: 'from-[#415a77] to-[#2d4260]', avatar: 'bg-[#415a77] text-white' },
+  { strip: 'from-[#1b263b] to-[#0d1b2a]', avatar: 'bg-[#1b263b] text-white' },
+  { strip: 'from-[#5a7a9a] to-[#415a77]', avatar: 'bg-[#778da9] text-white' },
+  { strip: 'from-[#253450] to-[#1b263b]', avatar: 'bg-[#253450] text-white' },
 ]
 
 export default function EmployeesPage() {
-  const [search, setSearch]   = useState('')
-  const [filter, setFilter]   = useState<FilterKey>('Alle')
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<FilterKey>('Alle')
 
   const filtered = MOCK_MITARBEITER.filter((m) => {
     const matchSearch =
@@ -60,44 +61,43 @@ export default function EmployeesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Mitarbeiter</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Mitarbeiter</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <Users className="size-4" />
-              Gesamt
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{total}</p>
-            <p className="text-sm text-muted-foreground mt-1">Aktive Mitarbeiter</p>
+        <Card className="border-l-[4px] border-l-primary">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex items-center justify-center size-10 rounded-lg bg-primary/10 text-primary shrink-0">
+              <Users className="size-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold leading-none">{total}</p>
+              <p className="text-xs text-muted-foreground mt-1">Aktive Mitarbeiter</p>
+            </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <ClipboardList className="size-4" />
-              Im Einsatz
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{mitAuftrag}</p>
-            <p className="text-sm text-muted-foreground mt-1">Hat aktiven Auftrag</p>
+
+        <Card className="border-l-[4px] border-l-ring">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex items-center justify-center size-10 rounded-lg bg-ring/10 text-ring shrink-0">
+              <ClipboardList className="size-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold leading-none">{mitAuftrag}</p>
+              <p className="text-xs text-muted-foreground mt-1">Hat aktiven Auftrag</p>
+            </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <CheckCircle2 className="size-4" />
-              Verfügbar
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{verfuegbar}</p>
-            <p className="text-sm text-muted-foreground mt-1">Kein aktiver Auftrag</p>
+
+        <Card className="border-l-[4px] border-l-success">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex items-center justify-center size-10 rounded-lg bg-success/10 text-success shrink-0">
+              <CheckCircle2 className="size-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold leading-none">{verfuegbar}</p>
+              <p className="text-xs text-muted-foreground mt-1">Kein aktiver Auftrag</p>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -134,46 +134,54 @@ export default function EmployeesPage() {
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((m, i) => (
-            <Card key={m.id} className="flex flex-col gap-0">
-              <CardContent className="pt-5 flex flex-col gap-3">
+          {filtered.map((m, i) => {
+            const theme = cardThemes[i % cardThemes.length]
+            return (
+              <Card key={m.id} className="flex flex-col overflow-hidden p-0 gap-0">
+                {/* Gradient strip */}
+                <div className={cn('h-12 bg-gradient-to-br shrink-0', theme.strip)} />
 
-                {/* Avatar + Status dot */}
-                <div className="flex items-start justify-between">
-                  <Avatar size="lg" className={cn(avatarColors[i % avatarColors.length])}>
-                    <AvatarFallback className={cn('text-base font-semibold', avatarColors[i % avatarColors.length])}>
-                      {m.vorname[0]}{m.nachname[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className={cn(
-                    'mt-1 h-2.5 w-2.5 rounded-full ring-2 ring-background',
-                    m.hatAuftrag ? 'bg-[#415a77]' : 'bg-success'
-                  )} />
-                </div>
+                <CardContent className="flex flex-col gap-3 px-4 pb-4 pt-0 -mt-6">
+                  {/* Avatar overlapping strip + status dot */}
+                  <div className="flex items-start justify-between">
+                    <Avatar
+                      size="lg"
+                      className={cn('ring-2 ring-card shrink-0', theme.avatar)}
+                    >
+                      <AvatarFallback className={cn('text-base font-bold', theme.avatar)}>
+                        {m.vorname[0]}{m.nachname[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className={cn(
+                      'mt-7 size-2.5 rounded-full ring-2 ring-card shrink-0',
+                      m.hatAuftrag ? 'bg-ring' : 'bg-success'
+                    )} />
+                  </div>
 
-                {/* Name + email */}
-                <div>
-                  <p className="font-semibold leading-tight">{m.vorname} {m.nachname}</p>
-                  <p className="text-sm text-muted-foreground mt-0.5 truncate">{m.email}</p>
-                </div>
+                  {/* Name + email */}
+                  <div>
+                    <p className="font-semibold leading-tight">{m.vorname} {m.nachname}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{m.email}</p>
+                  </div>
 
-                {/* Rolle + Abteilung */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant={rolleVariant[m.rolle]}>{m.rolle}</Badge>
-                  <span className="text-sm text-muted-foreground">{m.abteilung}</span>
-                </div>
+                  {/* Rolle + Abteilung */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant={rolleVariant[m.rolle]}>{m.rolle}</Badge>
+                    <span className="text-xs text-muted-foreground">{m.abteilung}</span>
+                  </div>
 
-                {/* Status */}
-                <div className="border-t pt-3">
-                  {m.hatAuftrag ? (
-                    <p className="text-sm font-medium text-primary">Im Einsatz</p>
-                  ) : (
-                    <p className="text-sm font-medium text-success">Verfügbar</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  {/* Status */}
+                  <div className="border-t pt-2.5">
+                    {m.hatAuftrag ? (
+                      <p className="text-xs font-semibold text-ring uppercase tracking-wide">Im Einsatz</p>
+                    ) : (
+                      <p className="text-xs font-semibold text-success uppercase tracking-wide">Verfügbar</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
     </div>

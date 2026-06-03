@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Timer, LogIn, LogOut } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { LogIn, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 function formatDuration(seconds: number) {
@@ -13,9 +12,9 @@ function formatDuration(seconds: number) {
 }
 
 export function StempelButton() {
-  const [isStamped, setIsStamped] = useState(false)
-  const [startTime, setStartTime] = useState<number | null>(null)
-  const [elapsed, setElapsed] = useState(0)
+  const [isStamped,  setIsStamped]  = useState(false)
+  const [startTime,  setStartTime]  = useState<number | null>(null)
+  const [elapsed,    setElapsed]    = useState(0)
 
   useEffect(() => {
     if (!isStamped || startTime === null) return
@@ -38,39 +37,38 @@ export function StempelButton() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div
-        className={cn(
-          'flex items-center gap-2 text-sm font-medium',
-          isStamped ? 'text-success' : 'text-muted-foreground'
-        )}
-      >
-        <Timer className="size-4" />
-        {isStamped ? `Eingestempelt seit ${formatDuration(elapsed)}` : 'Nicht eingestempelt'}
+    <div className="flex flex-col items-center gap-5">
+      {/* Elapsed time / status label */}
+      <div className={cn(
+        'text-sm font-medium tabular-nums tracking-wide transition-colors',
+        isStamped ? 'text-destructive' : 'text-muted-foreground'
+      )}>
+        {isStamped ? formatDuration(elapsed) : 'Nicht eingestempelt'}
       </div>
-      <Button
-        size="lg"
-        variant="outline"
+
+      {/* Circular CTA button */}
+      <button
         onClick={handleToggle}
         className={cn(
-          'h-16 w-48 text-base gap-2',
+          'flex flex-col items-center justify-center size-32 rounded-full border-2 cursor-pointer select-none',
+          'transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
           isStamped
-            ? 'border-destructive text-destructive hover:bg-destructive/10'
-            : 'border-success text-success hover:bg-success/10'
+            ? 'bg-destructive/10 border-destructive text-destructive stamp-active'
+            : 'bg-success/10 border-success text-success hover:bg-success/20 active:scale-95'
         )}
       >
         {isStamped ? (
           <>
-            <LogOut className="size-5" />
-            Ausstempeln
+            <LogOut className="size-6 mb-1" />
+            <span className="text-[0.6rem] font-bold uppercase tracking-widest">Ausstempeln</span>
           </>
         ) : (
           <>
-            <LogIn className="size-5" />
-            Einstempeln
+            <LogIn className="size-6 mb-1" />
+            <span className="text-[0.6rem] font-bold uppercase tracking-widest">Einstempeln</span>
           </>
         )}
-      </Button>
+      </button>
     </div>
   )
 }

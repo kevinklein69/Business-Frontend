@@ -34,9 +34,9 @@ const statusConfig: Record<Urlaubsantrag['status'], {
   className?: string
   icon: React.ReactNode
 }> = {
-  Genehmigt: { variant: 'outline',     className: 'border-success text-success bg-success/10', icon: <CheckCircle2 className="size-4" /> },
-  Offen:     { variant: 'outline',     icon: <Clock        className="size-4" /> },
-  Abgelehnt: { variant: 'destructive', icon: <XCircle      className="size-4" /> },
+  Genehmigt: { variant: 'outline', className: 'border-success text-success bg-success/10', icon: <CheckCircle2 className="size-4" /> },
+  Offen:     { variant: 'outline', icon: <Clock className="size-4" /> },
+  Abgelehnt: { variant: 'destructive', icon: <XCircle className="size-4" /> },
 }
 
 function arbeitstage(von: string, bis: string) {
@@ -44,8 +44,8 @@ function arbeitstage(von: string, bis: string) {
 }
 
 export default function VacationPage() {
-  const [antraege, setAntraege] = useState<Urlaubsantrag[]>(MOCK_ANTRAEGE)
-  const [range, setRange] = useState<DateRange | undefined>(undefined)
+  const [antraege,  setAntraege]  = useState<Urlaubsantrag[]>(MOCK_ANTRAEGE)
+  const [range,     setRange]     = useState<DateRange | undefined>(undefined)
   const [kommentar, setKommentar] = useState('')
 
   const genehmigteTage = antraege
@@ -54,7 +54,8 @@ export default function VacationPage() {
   const offeneTage = antraege
     .filter((a) => a.status === 'Offen')
     .reduce((sum, a) => sum + arbeitstage(a.von, a.bis), 0)
-  const restTage = GESAMT_TAGE - genehmigteTage
+  const restTage   = GESAMT_TAGE - genehmigteTage
+  const usedPct    = Math.round((genehmigteTage / GESAMT_TAGE) * 100)
 
   const selectedDays =
     range?.from && range?.to
@@ -80,46 +81,47 @@ export default function VacationPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Urlaub</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Urlaub</h1>
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <PalmtreeIcon className="size-4" />
-              Resturlaub
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{restTage}</p>
-            <p className="text-sm text-muted-foreground mt-1">von {GESAMT_TAGE} Tagen gesamt</p>
+        <Card className="border-l-[4px] border-l-success flex flex-col">
+          <CardContent className="flex-1 flex flex-col items-center justify-center gap-2 py-6 text-center">
+            <div className="flex items-center justify-center size-10 rounded-full bg-muted text-muted-foreground">
+              <PalmtreeIcon className="size-5" />
+            </div>
+            <p className="text-3xl font-bold leading-none">{restTage}</p>
+            <p className="text-sm text-muted-foreground">von {GESAMT_TAGE} Tagen gesamt</p>
+            {/* Quota bar */}
+            <div className="w-full mt-1">
+              <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-success/70 to-success transition-all"
+                  style={{ width: `${usedPct}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1.5">{usedPct}% verbraucht</p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <CheckCircle2 className="size-4" />
-              Genehmigt
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{genehmigteTage}</p>
-            <p className="text-sm text-muted-foreground mt-1">Arbeitstage geplant</p>
+        <Card className="border-l-[4px] border-l-ring flex flex-col">
+          <CardContent className="flex-1 flex flex-col items-center justify-center gap-2 py-6 text-center">
+            <div className="flex items-center justify-center size-10 rounded-full bg-ring/10 text-ring">
+              <CheckCircle2 className="size-5" />
+            </div>
+            <p className="text-3xl font-bold leading-none">{genehmigteTage}</p>
+            <p className="text-sm text-muted-foreground">Urlaubstage geplant</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <Clock className="size-4" />
-              Ausstehend
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{offeneTage}</p>
-            <p className="text-sm text-muted-foreground mt-1">Tage zur Genehmigung</p>
+        <Card className="border-l-[4px] border-l-muted-foreground flex flex-col">
+          <CardContent className="flex-1 flex flex-col items-center justify-center gap-2 py-6 text-center">
+            <div className="flex items-center justify-center size-10 rounded-full bg-muted text-muted-foreground">
+              <Clock className="size-5" />
+            </div>
+            <p className="text-3xl font-bold leading-none">{offeneTage}</p>
+            <p className="text-sm text-muted-foreground">Tage zur Genehmigung</p>
           </CardContent>
         </Card>
       </div>
@@ -195,17 +197,20 @@ export default function VacationPage() {
               <TableBody>
                 {antraege.map((a) => {
                   const tage = arbeitstage(a.von, a.bis)
-                  const cfg = statusConfig[a.status]
+                  const cfg  = statusConfig[a.status]
                   return (
-                    <TableRow key={a.id}>
+                    <TableRow key={a.id} className="hover:bg-muted/50 transition-colors">
                       <TableCell className="font-medium">
                         {format(new Date(a.von), 'dd.MM.yyyy')}
                         <span className="text-muted-foreground"> – </span>
                         {format(new Date(a.bis), 'dd.MM.yyyy')}
                       </TableCell>
-                      <TableCell className="font-medium">{tage}</TableCell>
+                      <TableCell className="font-medium tabular-nums">{tage}</TableCell>
                       <TableCell>
-                        <Badge variant={cfg.variant} className={`flex w-fit items-center gap-1 ${cfg.className ?? ''}`}>
+                        <Badge
+                          variant={cfg.variant}
+                          className={`flex w-fit items-center gap-1 ${cfg.className ?? ''}`}
+                        >
                           {cfg.icon}
                           {a.status}
                         </Badge>

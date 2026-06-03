@@ -7,6 +7,7 @@ import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
+import { StempelButton } from '@/components/time-tracking/stamp-button'
 import { cn } from '@/lib/utils'
 
 const MOCK_BUCHUNGEN = [
@@ -17,13 +18,13 @@ const MOCK_BUCHUNGEN = [
   { datum: '2026-05-29', von: '07:50', bis: '16:15', dauer: '8:25', minuten: 505 },
 ]
 
-const SOLLZEIT = 480
+const SOLLZEIT   = 480
 const WOCHE_SOLL = SOLLZEIT * 5
 
 function formatDiff(diff: number) {
   const abs = Math.abs(diff)
-  const h = Math.floor(abs / 60)
-  const m = String(abs % 60).padStart(2, '0')
+  const h   = Math.floor(abs / 60)
+  const m   = String(abs % 60).padStart(2, '0')
   return `${diff >= 0 ? '+' : '-'}${h}:${m}h`
 }
 
@@ -34,10 +35,17 @@ const wocheDiff    = wocheMinuten - WOCHE_SOLL
 export default function TimeTrackingPage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Zeiterfassung</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Zeiterfassung</h1>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card>
+      {/* Stempel widget + stats */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[auto_1fr_1fr_1fr]">
+        {/* Stamp-in card */}
+        <Card className="flex items-center justify-center px-6 py-5 border-l-[4px] border-l-ring">
+          <StempelButton />
+        </Card>
+
+        {/* Diese Woche */}
+        <Card className="border-l-[4px] border-l-ring">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Clock className="size-4" />
@@ -46,23 +54,26 @@ export default function TimeTrackingPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div>
-              <p className="text-3xl font-bold">41:40</p>
+              <p className="text-3xl font-bold tabular-nums">41:40</p>
               <p className={cn('text-sm mt-1 flex items-center gap-1', wocheDiff >= 0 ? 'text-success' : 'text-destructive')}>
-                {wocheDiff >= 0 ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
+                {wocheDiff >= 0
+                  ? <TrendingUp  className="size-3.5" />
+                  : <TrendingDown className="size-3.5" />}
                 {formatDiff(wocheDiff)} gegenüber Sollzeit
               </p>
             </div>
-            <div className="flex flex-col gap-1">
-              <div className="h-2 w-full rounded-full bg-muted overflow-hidden flex">
+            {/* Progress bar: neutral fill + green (Überstunden) or red (Minusstunden) */}
+            <div className="flex flex-col gap-1.5">
+              <div className="h-3 w-full rounded-full bg-muted overflow-hidden flex">
                 {wocheProzent >= 100 ? (
                   <>
-                    <div className="h-full bg-muted-foreground/40 transition-all" style={{ width: `${(100 / wocheProzent) * 100}%` }} />
-                    <div className="h-full bg-success transition-all"            style={{ width: `${((wocheProzent - 100) / wocheProzent) * 100}%` }} />
+                    <div className="h-full bg-ring/40 transition-all shrink-0" style={{ width: `${(100 / wocheProzent) * 100}%` }} />
+                    <div className="h-full bg-success transition-all shrink-0"  style={{ width: `${((wocheProzent - 100) / wocheProzent) * 100}%` }} />
                   </>
                 ) : (
                   <>
-                    <div className="h-full bg-muted-foreground/40 transition-all" style={{ width: `${wocheProzent}%` }} />
-                    <div className="h-full bg-destructive/50 transition-all"      style={{ width: `${100 - wocheProzent}%` }} />
+                    <div className="h-full bg-ring/40 transition-all shrink-0"      style={{ width: `${wocheProzent}%` }} />
+                    <div className="h-full bg-destructive/40 transition-all shrink-0" style={{ width: `${100 - wocheProzent}%` }} />
                   </>
                 )}
               </div>
@@ -75,7 +86,8 @@ export default function TimeTrackingPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Dieser Monat */}
+        <Card className="border-l-[4px] border-l-primary">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <CalendarDays className="size-4" />
@@ -83,12 +95,13 @@ export default function TimeTrackingPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">168:30</p>
+            <p className="text-3xl font-bold tabular-nums">168:30</p>
             <p className="text-sm text-muted-foreground mt-1">Sollzeit: 168:00 h</p>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Gesamtsaldo */}
+        <Card className="border-l-[4px] border-l-success">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <TrendingUp className="size-4" />
@@ -96,12 +109,13 @@ export default function TimeTrackingPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-success">+12:15</p>
+            <p className="text-3xl font-bold text-success tabular-nums">+12:15</p>
             <p className="text-sm text-muted-foreground mt-1">Zeitkonto-Saldo</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Recent bookings table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -124,18 +138,18 @@ export default function TimeTrackingPage() {
               {MOCK_BUCHUNGEN.map((b) => {
                 const diff = b.minuten - SOLLZEIT
                 return (
-                  <TableRow key={b.datum}>
+                  <TableRow key={b.datum} className="hover:bg-muted/50 transition-colors">
                     <TableCell className="font-medium">
                       {format(new Date(b.datum), 'dd.MM.yyyy')}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{b.von}</TableCell>
-                    <TableCell className="text-muted-foreground">{b.bis}</TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">{b.von}</TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">{b.bis}</TableCell>
                     <TableCell className="font-semibold tabular-nums">{b.dauer}</TableCell>
                     <TableCell>
                       <span className={cn(
-                        'font-semibold tabular-nums',
-                        diff > 0 && 'text-success',
-                        diff < 0 && 'text-destructive',
+                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums',
+                        diff > 0  && 'bg-success/10 text-success',
+                        diff < 0  && 'bg-destructive/10 text-destructive',
                         diff === 0 && 'text-muted-foreground'
                       )}>
                         {formatDiff(diff)}

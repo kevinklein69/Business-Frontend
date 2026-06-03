@@ -1,7 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { LogOut, User } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
+import { LogOut } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -14,8 +14,26 @@ import {
 import { Button } from '@/components/ui/button'
 import { removeToken } from '@/lib/auth'
 
+const pageTitles: Record<string, string> = {
+  '/dashboard':    'Dashboard',
+  '/time-tracking': 'Zeiterfassung',
+  '/orders':       'Aufträge',
+  '/vacation':     'Urlaub',
+  '/employees':    'Mitarbeiter',
+  '/settings':     'Einstellungen',
+}
+
+function usePageTitle(): string {
+  const pathname = usePathname()
+  for (const [prefix, title] of Object.entries(pageTitles)) {
+    if (pathname === prefix || pathname.startsWith(prefix + '/')) return title
+  }
+  return 'Betrieb-App'
+}
+
 export function Header() {
-  const router = useRouter()
+  const router  = useRouter()
+  const title   = usePageTitle()
 
   const handleLogout = () => {
     removeToken()
@@ -23,13 +41,14 @@ export function Header() {
   }
 
   return (
-    <header className="h-14 border-b flex items-center justify-between px-6 bg-background shrink-0">
-      <div />
+    <header className="h-14 border-b flex items-center justify-between px-6 bg-card shrink-0 shadow-[0_1px_6px_rgba(13,27,42,0.06)]">
+      <h2 className="text-base font-semibold tracking-tight text-foreground">{title}</h2>
+
       <DropdownMenu>
-        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-full" />}>
           <Avatar>
-            <AvatarFallback>
-              <User className="size-4" />
+            <AvatarFallback className="bg-ring text-primary-foreground text-xs font-bold">
+              KK
             </AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>

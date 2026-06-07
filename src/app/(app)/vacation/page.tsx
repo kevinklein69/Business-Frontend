@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { format, differenceInBusinessDays } from 'date-fns'
-import { useCreateVacationRequest, useVacationRequests } from '@/hooks/use-vacation'
+import { useCreateAbsenceRequest, useAbsenceRequests } from '@/hooks/use-absences'
 import { de } from 'date-fns/locale'
 import { CalendarDays, CheckCircle2, Clock, XCircle, PalmtreeIcon } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,17 +20,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { VacationRequest } from '@/types'
+import type { AbsenceRequest } from '@/types'
 
 const TOTAL_DAYS = 30
 
-const statusLabel: Record<VacationRequest['status'], string> = {
+const statusLabel: Record<AbsenceRequest['status'], string> = {
   Approved: 'Genehmigt',
   Open:     'Offen',
   Rejected: 'Abgelehnt',
 }
 
-const statusConfig: Record<VacationRequest['status'], {
+const statusConfig: Record<AbsenceRequest['status'], {
   variant: 'default' | 'outline' | 'destructive'
   className?: string
   icon: React.ReactNode
@@ -41,10 +41,12 @@ const statusConfig: Record<VacationRequest['status'], {
 }
 
 export default function VacationPage() {
-  const { data: requests = [], isLoading } = useVacationRequests()
-  const createRequest = useCreateVacationRequest()
+  const { data: allRequests = [], isLoading } = useAbsenceRequests()
+  const createRequest = useCreateAbsenceRequest()
   const [range,    setRange]    = useState<DateRange | undefined>(undefined)
   const [comment,  setComment]  = useState('')
+
+  const requests = allRequests.filter((a) => a.type === 'Vacation')
 
   const approvedDays = requests
     .filter((a) => a.status === 'Approved')

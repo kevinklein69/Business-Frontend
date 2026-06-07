@@ -50,14 +50,19 @@ export interface Order {
   createdAt: string
 }
 
-export type VacationStatus = 'Open' | 'Approved' | 'Rejected'
+export type AbsenceStatus = 'Open' | 'Approved' | 'Rejected'
 
-export interface VacationRequest {
+export type AbsenceType = 'Vacation' | 'Sick' | 'ChildSick'
+
+export interface AbsenceRequest {
   id: string
+  userId: string
+  userName: string
+  type: AbsenceType
   startDate: string
   endDate: string
   businessDays: number
-  status: VacationStatus
+  status: AbsenceStatus
   comment?: string
 }
 

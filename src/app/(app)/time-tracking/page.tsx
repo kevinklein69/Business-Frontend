@@ -179,7 +179,7 @@ export default function TimeTrackingPage() {
               {entries.map((b) => {
                 const diff = b.durationMinutes - DAILY_TARGET_MINUTES
                 return (
-                  <TableRow key={b.date} className="hover:bg-muted/50 transition-colors">
+                  <TableRow key={b.clockIn} className="hover:bg-muted/50 transition-colors">
                     <TableCell className="font-medium">
                       {format(new Date(b.date), 'dd.MM.yyyy')}
                     </TableCell>

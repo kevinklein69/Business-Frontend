@@ -12,6 +12,16 @@ export function useTimeEntries() {
   })
 }
 
+export function useClockStatus() {
+  return useQuery({
+    queryKey: ['time-tracking', 'status'],
+    queryFn: async () => {
+      const res = await apiClient.get<ToggleClockResult>('/api/time-tracking/status')
+      return res.data
+    },
+  })
+}
+
 export function useTimeBalance() {
   return useQuery({
     queryKey: ['time-tracking', 'balance'],

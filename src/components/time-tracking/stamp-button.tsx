@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { LogIn, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useToggleClock } from '@/hooks/use-time-tracking'
+import { useClockStatus, useToggleClock } from '@/hooks/use-time-tracking'
 
 function formatDuration(seconds: number) {
   const h = Math.floor(seconds / 3600)
@@ -13,10 +13,18 @@ function formatDuration(seconds: number) {
 }
 
 export function ClockButton() {
+  const clockStatus = useClockStatus()
   const toggleClock = useToggleClock()
   const [isClockedIn, setIsClockedIn] = useState(false)
   const [startTime,   setStartTime]   = useState<number | null>(null)
   const [elapsed,     setElapsed]     = useState(0)
+
+  // Sync local state with the server's clock status, e.g. after navigating
+  // back to this page or reloading — the server is the source of truth.
+  useEffect(() => {
+    if (!clockStatus.data) return
+    applyStatus(clockStatus.data)
+  }, [clockStatus.data])
 
   useEffect(() => {
     if (!isClockedIn || startTime === null) return
@@ -26,19 +34,19 @@ export function ClockButton() {
     return () => clearInterval(interval)
   }, [isClockedIn, startTime])
 
+  function applyStatus(result: { isClockedIn: boolean; clockIn?: string }) {
+    setIsClockedIn(result.isClockedIn)
+    if (result.isClockedIn && result.clockIn) {
+      setStartTime(new Date(result.clockIn).getTime())
+      setElapsed(Math.floor((Date.now() - new Date(result.clockIn).getTime()) / 1000))
+    } else {
+      setStartTime(null)
+      setElapsed(0)
+    }
+  }
+
   const handleToggle = () => {
-    toggleClock.mutate(undefined, {
-      onSuccess: (result) => {
-        setIsClockedIn(result.isClockedIn)
-        if (result.isClockedIn && result.clockIn) {
-          setStartTime(new Date(result.clockIn).getTime())
-          setElapsed(Math.floor((Date.now() - new Date(result.clockIn).getTime()) / 1000))
-        } else {
-          setStartTime(null)
-          setElapsed(0)
-        }
-      },
-    })
+    toggleClock.mutate(undefined, { onSuccess: applyStatus })
   }
 
   return (

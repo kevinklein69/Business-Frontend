@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -19,6 +20,7 @@ const pageTitles: Record<string, string> = {
   '/time-tracking': 'Zeiterfassung',
   '/orders':       'Aufträge',
   '/vacation':     'Urlaub',
+  '/absences':     'Fehlzeiten',
   '/employees':    'Mitarbeiter',
   '/settings':     'Einstellungen',
 }
@@ -53,12 +55,14 @@ export function Header() {
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Mein Konto</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onClick={handleLogout}>
-            <LogOut />
-            Abmelden
-          </DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Mein Konto</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onClick={handleLogout}>
+              <LogOut />
+              Abmelden
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

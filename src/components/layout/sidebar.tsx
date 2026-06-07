@@ -7,10 +7,12 @@ import {
   Clock,
   ClipboardList,
   CalendarDays,
+  Stethoscope,
   Users,
   Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useIsManager } from '@/lib/auth'
 
 const navItems = [
   { href: '/dashboard',    label: 'Dashboard',    icon: LayoutDashboard },
@@ -20,10 +22,17 @@ const navItems = [
   { href: '/employees',    label: 'Mitarbeiter',   icon: Users },
 ]
 
+const managerNavItems = [
+  { href: '/absences',     label: 'Fehlzeiten',    icon: Stethoscope },
+]
+
 const settingsItem = { href: '/settings', label: 'Einstellungen', icon: Settings }
 
 export function Sidebar() {
   const pathname = usePathname()
+  const showManagerNav = useIsManager()
+
+  const items = showManagerNav ? [...navItems, ...managerNavItems] : navItems
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 
@@ -43,7 +52,7 @@ export function Sidebar() {
           Navigation
         </p>
         <ul className="flex flex-col gap-0.5 px-2">
-          {navItems.map(({ href, label, icon: Icon }) => {
+          {items.map(({ href, label, icon: Icon }) => {
             const active = isActive(href)
             return (
               <li key={href}>

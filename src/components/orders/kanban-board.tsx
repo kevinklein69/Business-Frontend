@@ -19,21 +19,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
-import type { Order, OrderStatus } from '@/types'
-
-const EMPLOYEES = [
-  'Max Müller', 'Anna Schmidt', 'Tom Wagner',
-  'Lisa Bauer', 'Jonas Fischer', 'Maria Hoffmann',
-]
-
-const INITIAL_ORDERS: Order[] = [
-  { id: '1', title: 'Heizungsanlage prüfen', customer: 'Familie Berger', status: 'Backlog', assignees: [], createdAt: '2026-06-01' },
-  { id: '2', title: 'Dach-Inspektion', description: 'Jährliche Kontrolle', customer: 'Hausverwaltung GmbH', status: 'InProgress', assignees: ['Max Müller', 'Anna Schmidt'], createdAt: '2026-06-02' },
-  { id: '3', title: 'Elektroinstallation EG', status: 'InProgress', assignees: ['Tom Wagner'], createdAt: '2026-05-28' },
-  { id: '4', title: 'Sanitär OG', customer: 'Herr Meier', status: 'ReadyForAcceptance', assignees: ['Max Müller'], createdAt: '2026-05-20' },
-  { id: '5', title: 'Fensteraustausch 2. OG', description: 'Alle 4 Fenster', customer: 'Frau Koch', status: 'Invoicing', assignees: ['Tom Wagner', 'Jonas Fischer'], createdAt: '2026-05-15' },
-  { id: '6', title: 'Malerarbeiten EG', status: 'Done', assignees: ['Lisa Bauer'], createdAt: '2026-05-10' },
-]
+import { useEmployees } from '@/hooks/use-employees'
+import { useCreateOrder, useOrders, useUpdateOrder, useUpdateOrderStatus } from '@/hooks/use-orders'
+import type { Assignee, Employee, Order, OrderStatus } from '@/types'
 
 const COLUMNS: { key: OrderStatus; label: string; badgeVariant: 'default' | 'secondary' | 'outline' }[] = [
   { key: 'Backlog',            label: 'Backlog',             badgeVariant: 'secondary' },
@@ -43,8 +31,6 @@ const COLUMNS: { key: OrderStatus; label: string; badgeVariant: 'default' | 'sec
   { key: 'Done',               label: 'Erledigt',            badgeVariant: 'outline'   },
 ]
 
-const COL_KEYS = COLUMNS.map((c) => c.key)
-
 function initials(name: string) {
   return name.split(' ').map((n) => n[0]).join('').toUpperCase()
 }
@@ -53,37 +39,40 @@ function initials(name: string) {
 
 function OrderDetailDialog({
   order,
+  employees,
   open,
   onClose,
   onSave,
 }: {
   order: Order
+  employees: Employee[]
   open: boolean
   onClose: () => void
-  onSave: (updated: Order) => void
+  onSave: (updated: { title: string; customer?: string; description?: string; assigneeIds: string[] }) => void
 }) {
   const [title,          setTitle]          = useState(order.title)
   const [customer,       setCustomer]       = useState(order.customer ?? '')
   const [description,    setDescription]    = useState(order.description ?? '')
-  const [assignees,      setAssignees]      = useState<string[]>(order.assignees)
+  const [assignees,      setAssignees]      = useState<Assignee[]>(order.assignees)
   const [assigneeSearch, setAssigneeSearch] = useState('')
 
-  const filteredEmployees = EMPLOYEES.filter((m) =>
-    m.toLowerCase().includes(assigneeSearch.toLowerCase())
+  const filteredEmployees = employees.filter((m) =>
+    `${m.firstName} ${m.lastName}`.toLowerCase().includes(assigneeSearch.toLowerCase())
   )
 
-  const toggleAssignee = (name: string) =>
+  const toggleAssignee = (employee: Employee) =>
     setAssignees((prev) =>
-      prev.includes(name) ? prev.filter((m) => m !== name) : [...prev, name]
+      prev.some((a) => a.id === employee.id)
+        ? prev.filter((a) => a.id !== employee.id)
+        : [...prev, { id: employee.id, name: `${employee.firstName} ${employee.lastName}` }]
     )
 
   const handleSave = () => {
     onSave({
-      ...order,
       title:       title.trim() || order.title,
       customer:    customer.trim() || undefined,
       description: description.trim() || undefined,
-      assignees,
+      assigneeIds: assignees.map((a) => a.id),
     })
     onClose()
   }
@@ -166,13 +155,14 @@ function OrderDetailDialog({
                 <p className="col-span-2 text-center text-sm text-muted-foreground py-4">
                   Kein Mitarbeiter gefunden
                 </p>
-              ) : filteredEmployees.map((name) => {
-                const selected = assignees.includes(name)
+              ) : filteredEmployees.map((employee) => {
+                const name = `${employee.firstName} ${employee.lastName}`
+                const selected = assignees.some((a) => a.id === employee.id)
                 return (
                   <button
-                    key={name}
+                    key={employee.id}
                     type="button"
-                    onClick={() => toggleAssignee(name)}
+                    onClick={() => toggleAssignee(employee)}
                     className={cn(
                       'flex items-center gap-2 rounded-lg border px-2.5 py-2 text-sm transition-colors text-left',
                       selected
@@ -250,13 +240,13 @@ function KanbanCard({
             )}
             {order.assignees.length > 0 && (
               <div className="flex items-center gap-1 flex-wrap">
-                {order.assignees.slice(0, 3).map((name) => (
+                {order.assignees.slice(0, 3).map((assignee) => (
                   <div
-                    key={name}
-                    title={name}
+                    key={assignee.id}
+                    title={assignee.name}
                     className="flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold ring-2 ring-background"
                   >
-                    {initials(name).slice(0, 2)}
+                    {initials(assignee.name).slice(0, 2)}
                   </div>
                 ))}
                 {order.assignees.length > 3 && (
@@ -286,7 +276,7 @@ function KanbanColumn({
   const { isOver, setNodeRef } = useDroppable({ id: col.key })
 
   return (
-    <div className="flex flex-col gap-2 flex-1 min-w-[160px]">
+    <div className="flex flex-col gap-2 flex-1 min-w-40">
       <div className="flex items-center justify-between px-1">
         <span className="text-sm font-medium">{col.label}</span>
         <Badge variant={col.badgeVariant}>{items.length}</Badge>
@@ -312,7 +302,13 @@ function KanbanColumn({
 // ── Board ─────────────────────────────────────────────────────────────────────
 
 export function KanbanBoard() {
-  const [orders,         setOrders]         = useState<Order[]>(INITIAL_ORDERS)
+  const { data: orders = [] }    = useOrders()
+  const { data: employees = [] } = useEmployees()
+
+  const updateStatus = useUpdateOrderStatus()
+  const updateOrder  = useUpdateOrder()
+  const createOrder  = useCreateOrder()
+
   const [activeId,       setActiveId]       = useState<string | null>(null)
   const [detailOrder,    setDetailOrder]    = useState<Order | null>(null)
   const [newDialogOpen,  setNewDialogOpen]  = useState(false)
@@ -327,31 +323,29 @@ export function KanbanBoard() {
   const handleDragEnd = (e: DragEndEvent) => {
     setActiveId(null)
     if (!e.over) return
-    setOrders((prev) =>
-      prev.map((a) => a.id === e.active.id ? { ...a, status: e.over!.id as OrderStatus } : a)
-    )
+    const order = orders.find((a) => a.id === e.active.id)
+    const status = e.over.id as OrderStatus
+    if (!order || order.status === status) return
+    updateStatus.mutate({ id: order.id, status })
   }
 
-  const handleSaveDetail = (updated: Order) => {
-    setOrders((prev) => prev.map((a) => a.id === updated.id ? updated : a))
+  const handleSaveDetail = (updated: { title: string; customer?: string; description?: string; assigneeIds: string[] }) => {
+    if (!detailOrder) return
+    updateOrder.mutate({ id: detailOrder.id, ...updated })
   }
 
   const handleCreate = () => {
     if (!newTitle.trim()) return
-    setOrders((prev) => [
-      ...prev,
+    createOrder.mutate(
       {
-        id: crypto.randomUUID(),
         title: newTitle.trim(),
         description: newDescription.trim() || undefined,
-        status: 'Backlog',
-        assignees: [],
-        createdAt: new Date().toISOString().slice(0, 10),
+        assigneeIds: [],
       },
-    ])
+      { onSuccess: () => setNewDialogOpen(false) }
+    )
     setNewTitle('')
     setNewDescription('')
-    setNewDialogOpen(false)
   }
 
   return (
@@ -404,6 +398,7 @@ export function KanbanBoard() {
       {detailOrder && (
         <OrderDetailDialog
           order={detailOrder}
+          employees={employees}
           open={!!detailOrder}
           onClose={() => setDetailOrder(null)}
           onSave={handleSaveDetail}

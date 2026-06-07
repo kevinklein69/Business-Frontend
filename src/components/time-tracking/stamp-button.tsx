@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { LogIn, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useToggleClock } from '@/hooks/use-time-tracking'
 
 function formatDuration(seconds: number) {
   const h = Math.floor(seconds / 3600)
@@ -12,6 +13,7 @@ function formatDuration(seconds: number) {
 }
 
 export function ClockButton() {
+  const toggleClock = useToggleClock()
   const [isClockedIn, setIsClockedIn] = useState(false)
   const [startTime,   setStartTime]   = useState<number | null>(null)
   const [elapsed,     setElapsed]     = useState(0)
@@ -25,15 +27,18 @@ export function ClockButton() {
   }, [isClockedIn, startTime])
 
   const handleToggle = () => {
-    if (isClockedIn) {
-      setIsClockedIn(false)
-      setStartTime(null)
-      setElapsed(0)
-    } else {
-      setIsClockedIn(true)
-      setStartTime(Date.now())
-      setElapsed(0)
-    }
+    toggleClock.mutate(undefined, {
+      onSuccess: (result) => {
+        setIsClockedIn(result.isClockedIn)
+        if (result.isClockedIn && result.clockIn) {
+          setStartTime(new Date(result.clockIn).getTime())
+          setElapsed(Math.floor((Date.now() - new Date(result.clockIn).getTime()) / 1000))
+        } else {
+          setStartTime(null)
+          setElapsed(0)
+        }
+      },
+    })
   }
 
   return (
@@ -49,9 +54,11 @@ export function ClockButton() {
       {/* Circular CTA button */}
       <button
         onClick={handleToggle}
+        disabled={toggleClock.isPending}
         className={cn(
           'flex flex-col items-center justify-center size-32 rounded-full border-2 cursor-pointer select-none',
           'transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+          'disabled:opacity-60 disabled:cursor-not-allowed',
           isClockedIn
             ? 'bg-destructive/10 border-destructive text-destructive stamp-active'
             : 'bg-success/10 border-success text-success hover:bg-success/20 active:scale-95'

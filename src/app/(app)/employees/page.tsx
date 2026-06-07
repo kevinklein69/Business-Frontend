@@ -8,20 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
-import type { User, Role } from '@/types'
-
-const MOCK_EMPLOYEES: (User & { hasActiveOrder: boolean })[] = [
-  { id: '1', firstName: 'Max',   lastName: 'Müller',   email: 'max.mueller@firma.de',  role: 'Admin',    department: 'Leitung',    hasActiveOrder: false },
-  { id: '2', firstName: 'Anna',  lastName: 'Schmidt',  email: 'a.schmidt@firma.de',    role: 'Manager',  department: 'Technik',    hasActiveOrder: true  },
-  { id: '3', firstName: 'Tom',   lastName: 'Wagner',   email: 't.wagner@firma.de',     role: 'Employee', department: 'Technik',    hasActiveOrder: true  },
-  { id: '4', firstName: 'Lisa',  lastName: 'Bauer',    email: 'l.bauer@firma.de',      role: 'Employee', department: 'Verwaltung', hasActiveOrder: false },
-  { id: '5', firstName: 'Jonas', lastName: 'Fischer',  email: 'j.fischer@firma.de',    role: 'Employee', department: 'Technik',    hasActiveOrder: false },
-  { id: '6', firstName: 'Maria', lastName: 'Hoffmann', email: 'm.hoffmann@firma.de',   role: 'Manager',  department: 'Vertrieb',   hasActiveOrder: true  },
-  { id: '7', firstName: 'Felix', lastName: 'Koch',     email: 'f.koch@firma.de',       role: 'Employee', department: 'Vertrieb',   hasActiveOrder: false },
-  { id: '8', firstName: 'Sara',  lastName: 'Becker',   email: 's.becker@firma.de',     role: 'Employee', department: 'Verwaltung', hasActiveOrder: true  },
-]
-
-const DEPARTMENTS = [...new Set(MOCK_EMPLOYEES.map((m) => m.department!))].sort()
+import { useEmployees } from '@/hooks/use-employees'
+import type { Role } from '@/types'
 
 type FilterKey = 'Alle' | 'HatAuftrag' | 'KeinAuftrag' | string
 
@@ -49,7 +37,12 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterKey>('Alle')
 
-  const filtered = MOCK_EMPLOYEES.filter((m) => {
+  const { data: employees, isLoading, isError } = useEmployees()
+  const list = employees ?? []
+
+  const departments = [...new Set(list.map((m) => m.department).filter((d): d is string => !!d))].sort()
+
+  const filtered = list.filter((m) => {
     const matchSearch =
       search === '' ||
       `${m.firstName} ${m.lastName} ${m.email}`.toLowerCase().includes(search.toLowerCase())
@@ -61,13 +54,18 @@ export default function EmployeesPage() {
     return matchSearch && matchFilter
   })
 
-  const total      = MOCK_EMPLOYEES.length
-  const mitAuftrag = MOCK_EMPLOYEES.filter((m) => m.hasActiveOrder).length
+  const total      = list.length
+  const mitAuftrag = list.filter((m) => m.hasActiveOrder).length
   const verfuegbar = total - mitAuftrag
 
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold tracking-tight">Mitarbeiter</h1>
+
+      {isLoading && <p className="text-muted-foreground text-sm py-10 text-center">Lade Mitarbeiter…</p>}
+      {isError && <p className="text-destructive text-sm py-10 text-center">Mitarbeiter konnten nicht geladen werden.</p>}
+      {!isLoading && !isError && (
+      <>
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -120,7 +118,7 @@ export default function EmployeesPage() {
           />
         </div>
         <div className="flex flex-wrap gap-2">
-          {(['Alle', 'HatAuftrag', 'KeinAuftrag', ...DEPARTMENTS] as FilterKey[]).map((f) => (
+          {(['Alle', 'HatAuftrag', 'KeinAuftrag', ...departments] as FilterKey[]).map((f) => (
             <Button
               key={f}
               size="sm"
@@ -189,6 +187,8 @@ export default function EmployeesPage() {
             )
           })}
         </div>
+      )}
+      </>
       )}
     </div>
   )

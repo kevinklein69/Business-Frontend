@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { format, differenceInBusinessDays } from 'date-fns'
+import { useCreateVacationRequest, useVacationRequests } from '@/hooks/use-vacation'
 import { de } from 'date-fns/locale'
 import { CalendarDays, CheckCircle2, Clock, XCircle, PalmtreeIcon } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,12 +21,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import type { VacationRequest } from '@/types'
-
-const MOCK_REQUESTS: VacationRequest[] = [
-  { id: '1', userId: 'me', startDate: '2026-07-15', endDate: '2026-07-19', status: 'Approved', comment: 'Sommerurlaub' },
-  { id: '2', userId: 'me', startDate: '2026-09-01', endDate: '2026-09-05', status: 'Open' },
-  { id: '3', userId: 'me', startDate: '2026-12-27', endDate: '2026-12-31', status: 'Rejected', comment: 'Betriebsferien' },
-]
 
 const TOTAL_DAYS = 30
 
@@ -45,21 +40,18 @@ const statusConfig: Record<VacationRequest['status'], {
   Rejected: { variant: 'destructive', icon: <XCircle className="size-4" /> },
 }
 
-function businessDays(startDate: string, endDate: string) {
-  return differenceInBusinessDays(new Date(endDate), new Date(startDate)) + 1
-}
-
 export default function VacationPage() {
-  const [requests, setRequests] = useState<VacationRequest[]>(MOCK_REQUESTS)
+  const { data: requests = [], isLoading } = useVacationRequests()
+  const createRequest = useCreateVacationRequest()
   const [range,    setRange]    = useState<DateRange | undefined>(undefined)
   const [comment,  setComment]  = useState('')
 
   const approvedDays = requests
     .filter((a) => a.status === 'Approved')
-    .reduce((sum, a) => sum + businessDays(a.startDate, a.endDate), 0)
+    .reduce((sum, a) => sum + a.businessDays, 0)
   const openDays = requests
     .filter((a) => a.status === 'Open')
-    .reduce((sum, a) => sum + businessDays(a.startDate, a.endDate), 0)
+    .reduce((sum, a) => sum + a.businessDays, 0)
   const remainingDays = TOTAL_DAYS - approvedDays
   const usedPct       = Math.round((approvedDays / TOTAL_DAYS) * 100)
 
@@ -70,19 +62,19 @@ export default function VacationPage() {
 
   const handleSubmit = () => {
     if (!range?.from || !range?.to) return
-    setRequests((prev) => [
+    createRequest.mutate(
       {
-        id: crypto.randomUUID(),
-        userId: 'me',
-        startDate: format(range.from!, 'yyyy-MM-dd'),
-        endDate:   format(range.to!, 'yyyy-MM-dd'),
-        status: 'Open',
+        startDate: format(range.from, 'yyyy-MM-dd'),
+        endDate:   format(range.to, 'yyyy-MM-dd'),
         comment: comment.trim() || undefined,
       },
-      ...prev,
-    ])
-    setRange(undefined)
-    setComment('')
+      {
+        onSuccess: () => {
+          setRange(undefined)
+          setComment('')
+        },
+      }
+    )
   }
 
   return (
@@ -202,7 +194,7 @@ export default function VacationPage() {
               </TableHeader>
               <TableBody>
                 {requests.map((a) => {
-                  const days = businessDays(a.startDate, a.endDate)
+                  const days = a.businessDays
                   const cfg  = statusConfig[a.status]
                   return (
                     <TableRow key={a.id} className="hover:bg-muted/50 transition-colors">
@@ -227,7 +219,14 @@ export default function VacationPage() {
                     </TableRow>
                   )
                 })}
-                {requests.length === 0 && (
+                {isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
+                      Lade Anträge…
+                    </TableCell>
+                  </TableRow>
+                )}
+                {!isLoading && requests.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
                       Noch keine Anträge gestellt

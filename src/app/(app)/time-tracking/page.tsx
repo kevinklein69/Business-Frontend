@@ -8,18 +8,10 @@ import {
   TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { ClockButton } from '@/components/time-tracking/stamp-button'
+import { useTimeBalance, useTimeEntries } from '@/hooks/use-time-tracking'
 import { cn } from '@/lib/utils'
 
-const MOCK_ENTRIES = [
-  { date: '2026-06-02', clockIn: '07:45', clockOut: '16:30', durationMinutes: 525 },
-  { date: '2026-06-01', clockIn: '08:00', clockOut: '17:00', durationMinutes: 540 },
-  { date: '2026-05-31', clockIn: '07:30', clockOut: '15:00', durationMinutes: 450 },
-  { date: '2026-05-30', clockIn: '08:00', clockOut: '16:00', durationMinutes: 480 },
-  { date: '2026-05-29', clockIn: '07:50', clockOut: '16:15', durationMinutes: 505 },
-]
-
-const DAILY_TARGET_MINUTES  = 480
-const WEEKLY_TARGET_MINUTES = DAILY_TARGET_MINUTES * 5
+const DAILY_TARGET_MINUTES = 480
 
 function formatDiff(diff: number) {
   const abs = Math.abs(diff)
@@ -34,11 +26,17 @@ function formatMinutes(minutes: number) {
   return `${h}:${m}`
 }
 
-const weekMinutes = MOCK_ENTRIES.reduce((s, b) => s + b.durationMinutes, 0)
-const weekPercent = Math.min(Math.round((weekMinutes / WEEKLY_TARGET_MINUTES) * 100), 130)
-const weekDiff    = weekMinutes - WEEKLY_TARGET_MINUTES
-
 export default function TimeTrackingPage() {
+  const { data: entries = [], isLoading: entriesLoading } = useTimeEntries()
+  const { data: balance, isLoading: balanceLoading, isError: balanceError } = useTimeBalance()
+
+  const hasBalance        = !!balance
+  const weekMinutes       = balance?.weekMinutes ?? 0
+  const weekTargetMinutes = balance?.weekTargetMinutes || 1
+  const weekPercent       = Math.min(Math.round((weekMinutes / weekTargetMinutes) * 100), 130)
+  const weekDiff          = weekMinutes - weekTargetMinutes
+  const balanceText       = balanceLoading ? 'Lädt…' : balanceError ? '—' : null
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold tracking-tight">Zeiterfassung</h1>
@@ -59,8 +57,12 @@ export default function TimeTrackingPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
+            {!hasBalance ? (
+              <p className="text-sm text-muted-foreground">{balanceText}</p>
+            ) : (
+            <>
             <div>
-              <p className="text-3xl font-bold tabular-nums">41:40</p>
+              <p className="text-3xl font-bold tabular-nums">{formatMinutes(weekMinutes)}</p>
               <p className={cn('text-sm mt-1 flex items-center gap-1', weekDiff >= 0 ? 'text-success' : 'text-destructive')}>
                 {weekDiff >= 0
                   ? <TrendingUp  className="size-3.5" />
@@ -84,11 +86,13 @@ export default function TimeTrackingPage() {
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                {weekPercent}% von 40:00 h
+                {weekPercent}% von {formatMinutes(weekTargetMinutes)} h
                 {weekPercent > 100 && <span className="text-success ml-1">· +{weekPercent - 100}% Überstunden</span>}
                 {weekPercent < 100 && <span className="text-destructive ml-1">· -{100 - weekPercent}% fehlen noch</span>}
               </p>
             </div>
+            </>
+            )}
           </CardContent>
         </Card>
 
@@ -101,8 +105,14 @@ export default function TimeTrackingPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold tabular-nums">168:30</p>
-            <p className="text-sm text-muted-foreground mt-1">Sollzeit: 168:00 h</p>
+            {!hasBalance ? (
+              <p className="text-sm text-muted-foreground">{balanceText}</p>
+            ) : (
+            <>
+              <p className="text-3xl font-bold tabular-nums">{formatMinutes(balance.monthMinutes)}</p>
+              <p className="text-sm text-muted-foreground mt-1">Sollzeit: {formatMinutes(balance.monthTargetMinutes)} h</p>
+            </>
+            )}
           </CardContent>
         </Card>
 
@@ -115,8 +125,19 @@ export default function TimeTrackingPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-success tabular-nums">+12:15</p>
-            <p className="text-sm text-muted-foreground mt-1">Zeitkonto-Saldo</p>
+            {!hasBalance ? (
+              <p className="text-sm text-muted-foreground">{balanceText}</p>
+            ) : (
+            <>
+              <p className={cn(
+                'text-3xl font-bold tabular-nums',
+                balance.totalBalanceMinutes >= 0 ? 'text-success' : 'text-destructive'
+              )}>
+                {formatDiff(balance.totalBalanceMinutes)}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">Zeitkonto-Saldo</p>
+            </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -141,15 +162,29 @@ export default function TimeTrackingPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {MOCK_ENTRIES.map((b) => {
+              {entriesLoading && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                    Lade Buchungen…
+                  </TableCell>
+                </TableRow>
+              )}
+              {!entriesLoading && entries.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                    Noch keine Buchungen vorhanden
+                  </TableCell>
+                </TableRow>
+              )}
+              {entries.map((b) => {
                 const diff = b.durationMinutes - DAILY_TARGET_MINUTES
                 return (
                   <TableRow key={b.date} className="hover:bg-muted/50 transition-colors">
                     <TableCell className="font-medium">
                       {format(new Date(b.date), 'dd.MM.yyyy')}
                     </TableCell>
-                    <TableCell className="text-muted-foreground tabular-nums">{b.clockIn}</TableCell>
-                    <TableCell className="text-muted-foreground tabular-nums">{b.clockOut}</TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">{format(new Date(b.clockIn), 'HH:mm')}</TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">{format(new Date(b.clockOut), 'HH:mm')}</TableCell>
                     <TableCell className="font-semibold tabular-nums">{formatMinutes(b.durationMinutes)}</TableCell>
                     <TableCell>
                       <span className={cn(

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Providers } from "./providers";
 import "./globals.css";
 
 // Self-hosted Outfit (SIL Open Font License) — no requests to Google at build or runtime.
@@ -27,7 +28,9 @@ export default function RootLayout({
       lang="de"
       className={`${outfit.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

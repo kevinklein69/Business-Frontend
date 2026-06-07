@@ -19,30 +19,28 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
-import type { Auftrag } from '@/types'
+import type { Order, OrderStatus } from '@/types'
 
-type AuftragStatus = Auftrag['status']
-
-const MITARBEITER = [
+const EMPLOYEES = [
   'Max Müller', 'Anna Schmidt', 'Tom Wagner',
   'Lisa Bauer', 'Jonas Fischer', 'Maria Hoffmann',
 ]
 
-const INITIAL_AUFTRAEGE: Auftrag[] = [
-  { id: '1', titel: 'Heizungsanlage prüfen', kunde: 'Familie Berger', status: 'Backlog', zugewiesenAn: [], erstelltAm: '2026-06-01' },
-  { id: '2', titel: 'Dach-Inspektion', beschreibung: 'Jährliche Kontrolle', kunde: 'Hausverwaltung GmbH', status: 'InBearbeitung', zugewiesenAn: ['Max Müller', 'Anna Schmidt'], erstelltAm: '2026-06-02' },
-  { id: '3', titel: 'Elektroinstallation EG', status: 'InBearbeitung', zugewiesenAn: ['Tom Wagner'], erstelltAm: '2026-05-28' },
-  { id: '4', titel: 'Sanitär OG', kunde: 'Herr Meier', status: 'BereitFuerAbnahme', zugewiesenAn: ['Max Müller'], erstelltAm: '2026-05-20' },
-  { id: '5', titel: 'Fensteraustausch 2. OG', beschreibung: 'Alle 4 Fenster', kunde: 'Frau Koch', status: 'Rechnungserstellung', zugewiesenAn: ['Tom Wagner', 'Jonas Fischer'], erstelltAm: '2026-05-15' },
-  { id: '6', titel: 'Malerarbeiten EG', status: 'Erledigt', zugewiesenAn: ['Lisa Bauer'], erstelltAm: '2026-05-10' },
+const INITIAL_ORDERS: Order[] = [
+  { id: '1', title: 'Heizungsanlage prüfen', customer: 'Familie Berger', status: 'Backlog', assignees: [], createdAt: '2026-06-01' },
+  { id: '2', title: 'Dach-Inspektion', description: 'Jährliche Kontrolle', customer: 'Hausverwaltung GmbH', status: 'InProgress', assignees: ['Max Müller', 'Anna Schmidt'], createdAt: '2026-06-02' },
+  { id: '3', title: 'Elektroinstallation EG', status: 'InProgress', assignees: ['Tom Wagner'], createdAt: '2026-05-28' },
+  { id: '4', title: 'Sanitär OG', customer: 'Herr Meier', status: 'ReadyForAcceptance', assignees: ['Max Müller'], createdAt: '2026-05-20' },
+  { id: '5', title: 'Fensteraustausch 2. OG', description: 'Alle 4 Fenster', customer: 'Frau Koch', status: 'Invoicing', assignees: ['Tom Wagner', 'Jonas Fischer'], createdAt: '2026-05-15' },
+  { id: '6', title: 'Malerarbeiten EG', status: 'Done', assignees: ['Lisa Bauer'], createdAt: '2026-05-10' },
 ]
 
-const COLUMNS: { key: AuftragStatus; label: string; badgeVariant: 'default' | 'secondary' | 'outline' }[] = [
-  { key: 'Backlog',             label: 'Backlog',             badgeVariant: 'secondary' },
-  { key: 'InBearbeitung',       label: 'In Bearbeitung',      badgeVariant: 'default'   },
-  { key: 'BereitFuerAbnahme',   label: 'Bereit für Abnahme', badgeVariant: 'default'   },
-  { key: 'Rechnungserstellung', label: 'Rechnungserstellung', badgeVariant: 'default'   },
-  { key: 'Erledigt',            label: 'Erledigt',            badgeVariant: 'outline'   },
+const COLUMNS: { key: OrderStatus; label: string; badgeVariant: 'default' | 'secondary' | 'outline' }[] = [
+  { key: 'Backlog',            label: 'Backlog',             badgeVariant: 'secondary' },
+  { key: 'InProgress',         label: 'In Bearbeitung',      badgeVariant: 'default'   },
+  { key: 'ReadyForAcceptance', label: 'Bereit für Abnahme',  badgeVariant: 'default'   },
+  { key: 'Invoicing',          label: 'Rechnungserstellung', badgeVariant: 'default'   },
+  { key: 'Done',               label: 'Erledigt',            badgeVariant: 'outline'   },
 ]
 
 const COL_KEYS = COLUMNS.map((c) => c.key)
@@ -53,49 +51,49 @@ function initials(name: string) {
 
 // ── Detail Dialog ─────────────────────────────────────────────────────────────
 
-function AuftragDetailDialog({
-  auftrag,
+function OrderDetailDialog({
+  order,
   open,
   onClose,
   onSave,
 }: {
-  auftrag: Auftrag
+  order: Order
   open: boolean
   onClose: () => void
-  onSave: (updated: Auftrag) => void
+  onSave: (updated: Order) => void
 }) {
-  const [titel,           setTitel]        = useState(auftrag.titel)
-  const [kunde,           setKunde]        = useState(auftrag.kunde ?? '')
-  const [beschreibung,    setBeschreibung] = useState(auftrag.beschreibung ?? '')
-  const [mitarbeiter,     setMitarbeiter]  = useState<string[]>(auftrag.zugewiesenAn)
-  const [mitarbeiterSuche, setMitarbeiterSuche] = useState('')
+  const [title,          setTitle]          = useState(order.title)
+  const [customer,       setCustomer]       = useState(order.customer ?? '')
+  const [description,    setDescription]    = useState(order.description ?? '')
+  const [assignees,      setAssignees]      = useState<string[]>(order.assignees)
+  const [assigneeSearch, setAssigneeSearch] = useState('')
 
-  const gefilterteMitarbeiter = MITARBEITER.filter((m) =>
-    m.toLowerCase().includes(mitarbeiterSuche.toLowerCase())
+  const filteredEmployees = EMPLOYEES.filter((m) =>
+    m.toLowerCase().includes(assigneeSearch.toLowerCase())
   )
 
-  const toggleMitarbeiter = (name: string) =>
-    setMitarbeiter((prev) =>
+  const toggleAssignee = (name: string) =>
+    setAssignees((prev) =>
       prev.includes(name) ? prev.filter((m) => m !== name) : [...prev, name]
     )
 
   const handleSave = () => {
     onSave({
-      ...auftrag,
-      titel:        titel.trim() || auftrag.titel,
-      kunde:        kunde.trim() || undefined,
-      beschreibung: beschreibung.trim() || undefined,
-      zugewiesenAn: mitarbeiter,
+      ...order,
+      title:       title.trim() || order.title,
+      customer:    customer.trim() || undefined,
+      description: description.trim() || undefined,
+      assignees,
     })
     onClose()
   }
 
-  const statusLabel: Record<AuftragStatus, string> = {
-    Backlog:             'Backlog',
-    InBearbeitung:       'In Bearbeitung',
-    BereitFuerAbnahme:   'Bereit für Abnahme',
-    Rechnungserstellung: 'Rechnungserstellung',
-    Erledigt:            'Erledigt',
+  const statusLabel: Record<OrderStatus, string> = {
+    Backlog:            'Backlog',
+    InProgress:         'In Bearbeitung',
+    ReadyForAcceptance: 'Bereit für Abnahme',
+    Invoicing:          'Rechnungserstellung',
+    Done:               'Erledigt',
   }
 
   return (
@@ -108,36 +106,36 @@ function AuftragDetailDialog({
         <div className="flex flex-col gap-4 py-1">
           {/* Status badge */}
           <div className="flex items-center gap-2">
-            <Badge variant="secondary">{statusLabel[auftrag.status]}</Badge>
-            <span className="text-sm text-muted-foreground">Erstellt am {format(new Date(auftrag.erstelltAm), 'dd.MM.yyyy')}</span>
+            <Badge variant="secondary">{statusLabel[order.status]}</Badge>
+            <span className="text-sm text-muted-foreground">Erstellt am {format(new Date(order.createdAt), 'dd.MM.yyyy')}</span>
           </div>
 
           {/* Titel */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="d-titel">Titel</Label>
-            <Input id="d-titel" value={titel} onChange={(e) => setTitel(e.target.value)} />
+            <Label htmlFor="d-title">Titel</Label>
+            <Input id="d-title" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
 
           {/* Kunde */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="d-kunde" className="flex items-center gap-1.5">
+            <Label htmlFor="d-customer" className="flex items-center gap-1.5">
               <Building2 className="size-3.5" /> Kunde
             </Label>
             <Input
-              id="d-kunde"
-              value={kunde}
-              onChange={(e) => setKunde(e.target.value)}
+              id="d-customer"
+              value={customer}
+              onChange={(e) => setCustomer(e.target.value)}
               placeholder="Kundenname"
             />
           </div>
 
           {/* Beschreibung */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="d-beschreibung">Beschreibung</Label>
+            <Label htmlFor="d-description">Beschreibung</Label>
             <textarea
-              id="d-beschreibung"
-              value={beschreibung}
-              onChange={(e) => setBeschreibung(e.target.value)}
+              id="d-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="Auftragsdetails…"
               rows={3}
               className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base resize-none outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 placeholder:text-muted-foreground"
@@ -148,9 +146,9 @@ function AuftragDetailDialog({
           <div className="flex flex-col gap-2">
             <Label className="flex items-center gap-1.5">
               <User className="size-3.5" /> Mitarbeiter
-              {mitarbeiter.length > 0 && (
+              {assignees.length > 0 && (
                 <span className="ml-auto text-xs font-normal text-muted-foreground">
-                  {mitarbeiter.length} ausgewählt
+                  {assignees.length} ausgewählt
                 </span>
               )}
             </Label>
@@ -158,23 +156,23 @@ function AuftragDetailDialog({
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
               <Input
                 placeholder="Mitarbeiter suchen…"
-                value={mitarbeiterSuche}
-                onChange={(e) => setMitarbeiterSuche(e.target.value)}
+                value={assigneeSearch}
+                onChange={(e) => setAssigneeSearch(e.target.value)}
                 className="pl-8"
               />
             </div>
             <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-0.5">
-              {gefilterteMitarbeiter.length === 0 ? (
+              {filteredEmployees.length === 0 ? (
                 <p className="col-span-2 text-center text-sm text-muted-foreground py-4">
                   Kein Mitarbeiter gefunden
                 </p>
-              ) : gefilterteMitarbeiter.map((name) => {
-                const selected = mitarbeiter.includes(name)
+              ) : filteredEmployees.map((name) => {
+                const selected = assignees.includes(name)
                 return (
                   <button
                     key={name}
                     type="button"
-                    onClick={() => toggleMitarbeiter(name)}
+                    onClick={() => toggleAssignee(name)}
                     className={cn(
                       'flex items-center gap-2 rounded-lg border px-2.5 py-2 text-sm transition-colors text-left',
                       selected
@@ -209,15 +207,15 @@ function AuftragDetailDialog({
 // ── Kanban Card ───────────────────────────────────────────────────────────────
 
 function KanbanCard({
-  auftrag,
+  order,
   overlay = false,
   onOpen,
 }: {
-  auftrag: Auftrag
+  order: Order
   overlay?: boolean
-  onOpen?: (a: Auftrag) => void
+  onOpen?: (a: Order) => void
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: auftrag.id })
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: order.id })
 
   return (
     <div
@@ -229,30 +227,30 @@ function KanbanCard({
     >
       <Card
         size="sm"
-        onClick={() => !isDragging && onOpen?.(auftrag)}
+        onClick={() => !isDragging && onOpen?.(order)}
         className={cn(
           'select-none transition-shadow',
           !overlay && 'cursor-pointer hover:shadow-md hover:ring-2 hover:ring-primary/20 active:cursor-grabbing'
         )}
       >
         <CardHeader>
-          <CardTitle className="text-sm leading-snug">{auftrag.titel}</CardTitle>
+          <CardTitle className="text-sm leading-snug">{order.title}</CardTitle>
         </CardHeader>
 
-        {(auftrag.kunde || auftrag.beschreibung || auftrag.zugewiesenAn.length > 0) && (
+        {(order.customer || order.description || order.assignees.length > 0) && (
           <CardContent className="flex flex-col gap-2">
-            {auftrag.kunde && (
+            {order.customer && (
               <p className="text-sm text-muted-foreground flex items-center gap-1">
                 <Building2 className="size-3 shrink-0" />
-                {auftrag.kunde}
+                {order.customer}
               </p>
             )}
-            {auftrag.beschreibung && (
-              <p className="text-sm text-muted-foreground line-clamp-2">{auftrag.beschreibung}</p>
+            {order.description && (
+              <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
             )}
-            {auftrag.zugewiesenAn.length > 0 && (
+            {order.assignees.length > 0 && (
               <div className="flex items-center gap-1 flex-wrap">
-                {auftrag.zugewiesenAn.slice(0, 3).map((name) => (
+                {order.assignees.slice(0, 3).map((name) => (
                   <div
                     key={name}
                     title={name}
@@ -261,9 +259,9 @@ function KanbanCard({
                     {initials(name).slice(0, 2)}
                   </div>
                 ))}
-                {auftrag.zugewiesenAn.length > 3 && (
+                {order.assignees.length > 3 && (
                   <div className="flex size-6 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs ring-2 ring-background">
-                    +{auftrag.zugewiesenAn.length - 3}
+                    +{order.assignees.length - 3}
                   </div>
                 )}
               </div>
@@ -281,9 +279,9 @@ function KanbanColumn({
   col, items, activeId, onOpenCard,
 }: {
   col: typeof COLUMNS[number]
-  items: Auftrag[]
+  items: Order[]
   activeId: string | null
-  onOpenCard: (a: Auftrag) => void
+  onOpenCard: (a: Order) => void
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: col.key })
 
@@ -300,8 +298,8 @@ function KanbanColumn({
           isOver ? 'bg-primary/10 ring-primary/30' : 'bg-muted ring-border'
         )}
       >
-        {items.map((auftrag) => (
-          <KanbanCard key={auftrag.id} auftrag={auftrag} onOpen={onOpenCard} />
+        {items.map((order) => (
+          <KanbanCard key={order.id} order={order} onOpen={onOpenCard} />
         ))}
         {isOver && activeId && !items.find((a) => a.id === activeId) && (
           <div className="h-20 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5" />
@@ -314,45 +312,45 @@ function KanbanColumn({
 // ── Board ─────────────────────────────────────────────────────────────────────
 
 export function KanbanBoard() {
-  const [auftraege,       setAuftraege]       = useState<Auftrag[]>(INITIAL_AUFTRAEGE)
-  const [activeId,        setActiveId]        = useState<string | null>(null)
-  const [detailAuftrag,   setDetailAuftrag]   = useState<Auftrag | null>(null)
-  const [newDialogOpen,   setNewDialogOpen]   = useState(false)
-  const [newTitel,        setNewTitel]        = useState('')
-  const [newBeschreibung, setNewBeschreibung] = useState('')
+  const [orders,         setOrders]         = useState<Order[]>(INITIAL_ORDERS)
+  const [activeId,       setActiveId]       = useState<string | null>(null)
+  const [detailOrder,    setDetailOrder]    = useState<Order | null>(null)
+  const [newDialogOpen,  setNewDialogOpen]  = useState(false)
+  const [newTitle,       setNewTitle]       = useState('')
+  const [newDescription, setNewDescription] = useState('')
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
-  const activeAuftrag = auftraege.find((a) => a.id === activeId) ?? null
+  const activeOrder = orders.find((a) => a.id === activeId) ?? null
 
   const handleDragStart = (e: DragStartEvent) => setActiveId(e.active.id as string)
 
   const handleDragEnd = (e: DragEndEvent) => {
     setActiveId(null)
     if (!e.over) return
-    setAuftraege((prev) =>
-      prev.map((a) => a.id === e.active.id ? { ...a, status: e.over!.id as AuftragStatus } : a)
+    setOrders((prev) =>
+      prev.map((a) => a.id === e.active.id ? { ...a, status: e.over!.id as OrderStatus } : a)
     )
   }
 
-  const handleSaveDetail = (updated: Auftrag) => {
-    setAuftraege((prev) => prev.map((a) => a.id === updated.id ? updated : a))
+  const handleSaveDetail = (updated: Order) => {
+    setOrders((prev) => prev.map((a) => a.id === updated.id ? updated : a))
   }
 
   const handleCreate = () => {
-    if (!newTitel.trim()) return
-    setAuftraege((prev) => [
+    if (!newTitle.trim()) return
+    setOrders((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
-        titel: newTitel.trim(),
-        beschreibung: newBeschreibung.trim() || undefined,
+        title: newTitle.trim(),
+        description: newDescription.trim() || undefined,
         status: 'Backlog',
-        zugewiesenAn: [],
-        erstelltAm: new Date().toISOString().slice(0, 10),
+        assignees: [],
+        createdAt: new Date().toISOString().slice(0, 10),
       },
     ])
-    setNewTitel('')
-    setNewBeschreibung('')
+    setNewTitle('')
+    setNewDescription('')
     setNewDialogOpen(false)
   }
 
@@ -370,16 +368,16 @@ export function KanbanBoard() {
                 <DialogHeader><DialogTitle>Neuen Auftrag erstellen</DialogTitle></DialogHeader>
                 <div className="flex flex-col gap-4 py-2">
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="n-titel">Titel</Label>
-                    <Input id="n-titel" value={newTitel} onChange={(e) => setNewTitel(e.target.value)} placeholder="Auftragstitel" />
+                    <Label htmlFor="n-title">Titel</Label>
+                    <Input id="n-title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Auftragstitel" />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="n-beschreibung">Beschreibung (optional)</Label>
-                    <Input id="n-beschreibung" value={newBeschreibung} onChange={(e) => setNewBeschreibung(e.target.value)} placeholder="Kurze Beschreibung" />
+                    <Label htmlFor="n-description">Beschreibung (optional)</Label>
+                    <Input id="n-description" value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Kurze Beschreibung" />
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleCreate} disabled={!newTitel.trim()}>Erstellen</Button>
+                  <Button onClick={handleCreate} disabled={!newTitle.trim()}>Erstellen</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -390,24 +388,24 @@ export function KanbanBoard() {
               <KanbanColumn
                 key={col.key}
                 col={col}
-                items={auftraege.filter((a) => a.status === col.key)}
+                items={orders.filter((a) => a.status === col.key)}
                 activeId={activeId}
-                onOpenCard={setDetailAuftrag}
+                onOpenCard={setDetailOrder}
               />
             ))}
           </div>
         </div>
 
         <DragOverlay dropAnimation={null}>
-          {activeAuftrag && <KanbanCard auftrag={activeAuftrag} overlay />}
+          {activeOrder && <KanbanCard order={activeOrder} overlay />}
         </DragOverlay>
       </DndContext>
 
-      {detailAuftrag && (
-        <AuftragDetailDialog
-          auftrag={detailAuftrag}
-          open={!!detailAuftrag}
-          onClose={() => setDetailAuftrag(null)}
+      {detailOrder && (
+        <OrderDetailDialog
+          order={detailOrder}
+          open={!!detailOrder}
+          onClose={() => setDetailOrder(null)}
           onSave={handleSaveDetail}
         />
       )}

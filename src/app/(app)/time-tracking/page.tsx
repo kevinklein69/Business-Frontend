@@ -7,19 +7,19 @@ import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { StempelButton } from '@/components/time-tracking/stamp-button'
+import { ClockButton } from '@/components/time-tracking/stamp-button'
 import { cn } from '@/lib/utils'
 
-const MOCK_BUCHUNGEN = [
-  { datum: '2026-06-02', von: '07:45', bis: '16:30', dauer: '8:45', minuten: 525 },
-  { datum: '2026-06-01', von: '08:00', bis: '17:00', dauer: '9:00', minuten: 540 },
-  { datum: '2026-05-31', von: '07:30', bis: '15:00', dauer: '7:30', minuten: 450 },
-  { datum: '2026-05-30', von: '08:00', bis: '16:00', dauer: '8:00', minuten: 480 },
-  { datum: '2026-05-29', von: '07:50', bis: '16:15', dauer: '8:25', minuten: 505 },
+const MOCK_ENTRIES = [
+  { date: '2026-06-02', clockIn: '07:45', clockOut: '16:30', durationMinutes: 525 },
+  { date: '2026-06-01', clockIn: '08:00', clockOut: '17:00', durationMinutes: 540 },
+  { date: '2026-05-31', clockIn: '07:30', clockOut: '15:00', durationMinutes: 450 },
+  { date: '2026-05-30', clockIn: '08:00', clockOut: '16:00', durationMinutes: 480 },
+  { date: '2026-05-29', clockIn: '07:50', clockOut: '16:15', durationMinutes: 505 },
 ]
 
-const SOLLZEIT   = 480
-const WOCHE_SOLL = SOLLZEIT * 5
+const DAILY_TARGET_MINUTES  = 480
+const WEEKLY_TARGET_MINUTES = DAILY_TARGET_MINUTES * 5
 
 function formatDiff(diff: number) {
   const abs = Math.abs(diff)
@@ -28,9 +28,15 @@ function formatDiff(diff: number) {
   return `${diff >= 0 ? '+' : '-'}${h}:${m}h`
 }
 
-const wocheMinuten = MOCK_BUCHUNGEN.reduce((s, b) => s + b.minuten, 0)
-const wocheProzent = Math.min(Math.round((wocheMinuten / WOCHE_SOLL) * 100), 130)
-const wocheDiff    = wocheMinuten - WOCHE_SOLL
+function formatMinutes(minutes: number) {
+  const h = Math.floor(minutes / 60)
+  const m = String(minutes % 60).padStart(2, '0')
+  return `${h}:${m}`
+}
+
+const weekMinutes = MOCK_ENTRIES.reduce((s, b) => s + b.durationMinutes, 0)
+const weekPercent = Math.min(Math.round((weekMinutes / WEEKLY_TARGET_MINUTES) * 100), 130)
+const weekDiff    = weekMinutes - WEEKLY_TARGET_MINUTES
 
 export default function TimeTrackingPage() {
   return (
@@ -41,7 +47,7 @@ export default function TimeTrackingPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[auto_1fr_1fr_1fr]">
         {/* Stamp-in card */}
         <Card className="flex items-center justify-center px-6 py-5 border-l-[4px] border-l-ring">
-          <StempelButton />
+          <ClockButton />
         </Card>
 
         {/* Diese Woche */}
@@ -55,32 +61,32 @@ export default function TimeTrackingPage() {
           <CardContent className="flex flex-col gap-3">
             <div>
               <p className="text-3xl font-bold tabular-nums">41:40</p>
-              <p className={cn('text-sm mt-1 flex items-center gap-1', wocheDiff >= 0 ? 'text-success' : 'text-destructive')}>
-                {wocheDiff >= 0
+              <p className={cn('text-sm mt-1 flex items-center gap-1', weekDiff >= 0 ? 'text-success' : 'text-destructive')}>
+                {weekDiff >= 0
                   ? <TrendingUp  className="size-3.5" />
                   : <TrendingDown className="size-3.5" />}
-                {formatDiff(wocheDiff)} gegenüber Sollzeit
+                {formatDiff(weekDiff)} gegenüber Sollzeit
               </p>
             </div>
             {/* Progress bar: neutral fill + green (Überstunden) or red (Minusstunden) */}
             <div className="flex flex-col gap-1.5">
               <div className="h-3 w-full rounded-full bg-muted overflow-hidden flex">
-                {wocheProzent >= 100 ? (
+                {weekPercent >= 100 ? (
                   <>
-                    <div className="h-full bg-ring/40 transition-all shrink-0" style={{ width: `${(100 / wocheProzent) * 100}%` }} />
-                    <div className="h-full bg-success transition-all shrink-0"  style={{ width: `${((wocheProzent - 100) / wocheProzent) * 100}%` }} />
+                    <div className="h-full bg-ring/40 transition-all shrink-0" style={{ width: `${(100 / weekPercent) * 100}%` }} />
+                    <div className="h-full bg-success transition-all shrink-0"  style={{ width: `${((weekPercent - 100) / weekPercent) * 100}%` }} />
                   </>
                 ) : (
                   <>
-                    <div className="h-full bg-ring/40 transition-all shrink-0"      style={{ width: `${wocheProzent}%` }} />
-                    <div className="h-full bg-destructive/40 transition-all shrink-0" style={{ width: `${100 - wocheProzent}%` }} />
+                    <div className="h-full bg-ring/40 transition-all shrink-0"      style={{ width: `${weekPercent}%` }} />
+                    <div className="h-full bg-destructive/40 transition-all shrink-0" style={{ width: `${100 - weekPercent}%` }} />
                   </>
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                {wocheProzent}% von 40:00 h
-                {wocheProzent > 100 && <span className="text-success ml-1">· +{wocheProzent - 100}% Überstunden</span>}
-                {wocheProzent < 100 && <span className="text-destructive ml-1">· -{100 - wocheProzent}% fehlen noch</span>}
+                {weekPercent}% von 40:00 h
+                {weekPercent > 100 && <span className="text-success ml-1">· +{weekPercent - 100}% Überstunden</span>}
+                {weekPercent < 100 && <span className="text-destructive ml-1">· -{100 - weekPercent}% fehlen noch</span>}
               </p>
             </div>
           </CardContent>
@@ -135,16 +141,16 @@ export default function TimeTrackingPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {MOCK_BUCHUNGEN.map((b) => {
-                const diff = b.minuten - SOLLZEIT
+              {MOCK_ENTRIES.map((b) => {
+                const diff = b.durationMinutes - DAILY_TARGET_MINUTES
                 return (
-                  <TableRow key={b.datum} className="hover:bg-muted/50 transition-colors">
+                  <TableRow key={b.date} className="hover:bg-muted/50 transition-colors">
                     <TableCell className="font-medium">
-                      {format(new Date(b.datum), 'dd.MM.yyyy')}
+                      {format(new Date(b.date), 'dd.MM.yyyy')}
                     </TableCell>
-                    <TableCell className="text-muted-foreground tabular-nums">{b.von}</TableCell>
-                    <TableCell className="text-muted-foreground tabular-nums">{b.bis}</TableCell>
-                    <TableCell className="font-semibold tabular-nums">{b.dauer}</TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">{b.clockIn}</TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">{b.clockOut}</TableCell>
+                    <TableCell className="font-semibold tabular-nums">{formatMinutes(b.durationMinutes)}</TableCell>
                     <TableCell>
                       <span className={cn(
                         'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums',

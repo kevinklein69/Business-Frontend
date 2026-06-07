@@ -4,7 +4,7 @@
 // - Zugewiesener Mitarbeiter Avatar
 // - Erstellungsdatum
 
-export function AuftragCard() {
+export function OrderCard() {
   return (
     <div>
       {/* TODO: Auftrag-Karte */}

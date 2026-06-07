@@ -4,7 +4,7 @@
 // - Sortierung und Filterung
 // - Pagination
 
-export function MitarbeiterTable() {
+export function EmployeeTable() {
   return (
     <div>
       {/* TODO: Mitarbeiter-Tabelle */}

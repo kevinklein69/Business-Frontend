@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { StempelButton } from '@/components/time-tracking/stamp-button'
+import { ClockButton } from '@/components/time-tracking/stamp-button'
 import { ClipboardList, CalendarCheck, TrendingUp, Timer } from 'lucide-react'
 
 export default function DashboardPage() {
@@ -15,7 +15,7 @@ export default function DashboardPage() {
             </CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center py-4">
-          <StempelButton />
+          <ClockButton />
         </CardContent>
       </Card>
 

@@ -19,43 +19,49 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { Urlaubsantrag } from '@/types'
+import type { VacationRequest } from '@/types'
 
-const MOCK_ANTRAEGE: Urlaubsantrag[] = [
-  { id: '1', benutzerId: 'me', von: '2026-07-15', bis: '2026-07-19', status: 'Genehmigt', kommentar: 'Sommerurlaub' },
-  { id: '2', benutzerId: 'me', von: '2026-09-01', bis: '2026-09-05', status: 'Offen' },
-  { id: '3', benutzerId: 'me', von: '2026-12-27', bis: '2026-12-31', status: 'Abgelehnt', kommentar: 'Betriebsferien' },
+const MOCK_REQUESTS: VacationRequest[] = [
+  { id: '1', userId: 'me', startDate: '2026-07-15', endDate: '2026-07-19', status: 'Approved', comment: 'Sommerurlaub' },
+  { id: '2', userId: 'me', startDate: '2026-09-01', endDate: '2026-09-05', status: 'Open' },
+  { id: '3', userId: 'me', startDate: '2026-12-27', endDate: '2026-12-31', status: 'Rejected', comment: 'Betriebsferien' },
 ]
 
-const GESAMT_TAGE = 30
+const TOTAL_DAYS = 30
 
-const statusConfig: Record<Urlaubsantrag['status'], {
+const statusLabel: Record<VacationRequest['status'], string> = {
+  Approved: 'Genehmigt',
+  Open:     'Offen',
+  Rejected: 'Abgelehnt',
+}
+
+const statusConfig: Record<VacationRequest['status'], {
   variant: 'default' | 'outline' | 'destructive'
   className?: string
   icon: React.ReactNode
 }> = {
-  Genehmigt: { variant: 'outline', className: 'border-success text-success bg-success/10', icon: <CheckCircle2 className="size-4" /> },
-  Offen:     { variant: 'outline', icon: <Clock className="size-4" /> },
-  Abgelehnt: { variant: 'destructive', icon: <XCircle className="size-4" /> },
+  Approved: { variant: 'outline', className: 'border-success text-success bg-success/10', icon: <CheckCircle2 className="size-4" /> },
+  Open:     { variant: 'outline', icon: <Clock className="size-4" /> },
+  Rejected: { variant: 'destructive', icon: <XCircle className="size-4" /> },
 }
 
-function arbeitstage(von: string, bis: string) {
-  return differenceInBusinessDays(new Date(bis), new Date(von)) + 1
+function businessDays(startDate: string, endDate: string) {
+  return differenceInBusinessDays(new Date(endDate), new Date(startDate)) + 1
 }
 
 export default function VacationPage() {
-  const [antraege,  setAntraege]  = useState<Urlaubsantrag[]>(MOCK_ANTRAEGE)
-  const [range,     setRange]     = useState<DateRange | undefined>(undefined)
-  const [kommentar, setKommentar] = useState('')
+  const [requests, setRequests] = useState<VacationRequest[]>(MOCK_REQUESTS)
+  const [range,    setRange]    = useState<DateRange | undefined>(undefined)
+  const [comment,  setComment]  = useState('')
 
-  const genehmigteTage = antraege
-    .filter((a) => a.status === 'Genehmigt')
-    .reduce((sum, a) => sum + arbeitstage(a.von, a.bis), 0)
-  const offeneTage = antraege
-    .filter((a) => a.status === 'Offen')
-    .reduce((sum, a) => sum + arbeitstage(a.von, a.bis), 0)
-  const restTage   = GESAMT_TAGE - genehmigteTage
-  const usedPct    = Math.round((genehmigteTage / GESAMT_TAGE) * 100)
+  const approvedDays = requests
+    .filter((a) => a.status === 'Approved')
+    .reduce((sum, a) => sum + businessDays(a.startDate, a.endDate), 0)
+  const openDays = requests
+    .filter((a) => a.status === 'Open')
+    .reduce((sum, a) => sum + businessDays(a.startDate, a.endDate), 0)
+  const remainingDays = TOTAL_DAYS - approvedDays
+  const usedPct       = Math.round((approvedDays / TOTAL_DAYS) * 100)
 
   const selectedDays =
     range?.from && range?.to
@@ -64,19 +70,19 @@ export default function VacationPage() {
 
   const handleSubmit = () => {
     if (!range?.from || !range?.to) return
-    setAntraege((prev) => [
+    setRequests((prev) => [
       {
         id: crypto.randomUUID(),
-        benutzerId: 'me',
-        von: format(range.from!, 'yyyy-MM-dd'),
-        bis: format(range.to!, 'yyyy-MM-dd'),
-        status: 'Offen',
-        kommentar: kommentar.trim() || undefined,
+        userId: 'me',
+        startDate: format(range.from!, 'yyyy-MM-dd'),
+        endDate:   format(range.to!, 'yyyy-MM-dd'),
+        status: 'Open',
+        comment: comment.trim() || undefined,
       },
       ...prev,
     ])
     setRange(undefined)
-    setKommentar('')
+    setComment('')
   }
 
   return (
@@ -90,8 +96,8 @@ export default function VacationPage() {
             <div className="flex items-center justify-center size-10 rounded-full bg-muted text-muted-foreground">
               <PalmtreeIcon className="size-5" />
             </div>
-            <p className="text-3xl font-bold leading-none">{restTage}</p>
-            <p className="text-sm text-muted-foreground">von {GESAMT_TAGE} Tagen gesamt</p>
+            <p className="text-3xl font-bold leading-none">{remainingDays}</p>
+            <p className="text-sm text-muted-foreground">von {TOTAL_DAYS} Tagen gesamt</p>
             {/* Quota bar */}
             <div className="w-full mt-1">
               <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
@@ -110,7 +116,7 @@ export default function VacationPage() {
             <div className="flex items-center justify-center size-10 rounded-full bg-ring/10 text-ring">
               <CheckCircle2 className="size-5" />
             </div>
-            <p className="text-3xl font-bold leading-none">{genehmigteTage}</p>
+            <p className="text-3xl font-bold leading-none">{approvedDays}</p>
             <p className="text-sm text-muted-foreground">Urlaubstage geplant</p>
           </CardContent>
         </Card>
@@ -120,7 +126,7 @@ export default function VacationPage() {
             <div className="flex items-center justify-center size-10 rounded-full bg-muted text-muted-foreground">
               <Clock className="size-5" />
             </div>
-            <p className="text-3xl font-bold leading-none">{offeneTage}</p>
+            <p className="text-3xl font-bold leading-none">{openDays}</p>
             <p className="text-sm text-muted-foreground">Tage zur Genehmigung</p>
           </CardContent>
         </Card>
@@ -157,11 +163,11 @@ export default function VacationPage() {
             )}
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="kommentar">Kommentar (optional)</Label>
+              <Label htmlFor="comment">Kommentar (optional)</Label>
               <Input
-                id="kommentar"
-                value={kommentar}
-                onChange={(e) => setKommentar(e.target.value)}
+                id="comment"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
                 placeholder="z.B. Familienurlaub"
               />
             </div>
@@ -195,33 +201,33 @@ export default function VacationPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {antraege.map((a) => {
-                  const tage = arbeitstage(a.von, a.bis)
+                {requests.map((a) => {
+                  const days = businessDays(a.startDate, a.endDate)
                   const cfg  = statusConfig[a.status]
                   return (
                     <TableRow key={a.id} className="hover:bg-muted/50 transition-colors">
                       <TableCell className="font-medium">
-                        {format(new Date(a.von), 'dd.MM.yyyy')}
+                        {format(new Date(a.startDate), 'dd.MM.yyyy')}
                         <span className="text-muted-foreground"> – </span>
-                        {format(new Date(a.bis), 'dd.MM.yyyy')}
+                        {format(new Date(a.endDate), 'dd.MM.yyyy')}
                       </TableCell>
-                      <TableCell className="font-medium tabular-nums">{tage}</TableCell>
+                      <TableCell className="font-medium tabular-nums">{days}</TableCell>
                       <TableCell>
                         <Badge
                           variant={cfg.variant}
                           className={`flex w-fit items-center gap-1 ${cfg.className ?? ''}`}
                         >
                           {cfg.icon}
-                          {a.status}
+                          {statusLabel[a.status]}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {a.kommentar ?? '—'}
+                        {a.comment ?? '—'}
                       </TableCell>
                     </TableRow>
                   )
                 })}
-                {antraege.length === 0 && (
+                {requests.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
                       Noch keine Anträge gestellt

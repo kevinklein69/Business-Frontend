@@ -8,27 +8,33 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
-import type { Benutzer } from '@/types'
+import type { User, Role } from '@/types'
 
-const MOCK_MITARBEITER: (Benutzer & { hatAuftrag: boolean })[] = [
-  { id: '1', vorname: 'Max',   nachname: 'Müller',   email: 'max.mueller@firma.de',  rolle: 'Admin',       abteilung: 'Leitung',    hatAuftrag: false },
-  { id: '2', vorname: 'Anna',  nachname: 'Schmidt',  email: 'a.schmidt@firma.de',    rolle: 'Manager',     abteilung: 'Technik',    hatAuftrag: true  },
-  { id: '3', vorname: 'Tom',   nachname: 'Wagner',   email: 't.wagner@firma.de',     rolle: 'Mitarbeiter', abteilung: 'Technik',    hatAuftrag: true  },
-  { id: '4', vorname: 'Lisa',  nachname: 'Bauer',    email: 'l.bauer@firma.de',      rolle: 'Mitarbeiter', abteilung: 'Verwaltung', hatAuftrag: false },
-  { id: '5', vorname: 'Jonas', nachname: 'Fischer',  email: 'j.fischer@firma.de',    rolle: 'Mitarbeiter', abteilung: 'Technik',    hatAuftrag: false },
-  { id: '6', vorname: 'Maria', nachname: 'Hoffmann', email: 'm.hoffmann@firma.de',   rolle: 'Manager',     abteilung: 'Vertrieb',   hatAuftrag: true  },
-  { id: '7', vorname: 'Felix', nachname: 'Koch',     email: 'f.koch@firma.de',       rolle: 'Mitarbeiter', abteilung: 'Vertrieb',   hatAuftrag: false },
-  { id: '8', vorname: 'Sara',  nachname: 'Becker',   email: 's.becker@firma.de',     rolle: 'Mitarbeiter', abteilung: 'Verwaltung', hatAuftrag: true  },
+const MOCK_EMPLOYEES: (User & { hasActiveOrder: boolean })[] = [
+  { id: '1', firstName: 'Max',   lastName: 'Müller',   email: 'max.mueller@firma.de',  role: 'Admin',    department: 'Leitung',    hasActiveOrder: false },
+  { id: '2', firstName: 'Anna',  lastName: 'Schmidt',  email: 'a.schmidt@firma.de',    role: 'Manager',  department: 'Technik',    hasActiveOrder: true  },
+  { id: '3', firstName: 'Tom',   lastName: 'Wagner',   email: 't.wagner@firma.de',     role: 'Employee', department: 'Technik',    hasActiveOrder: true  },
+  { id: '4', firstName: 'Lisa',  lastName: 'Bauer',    email: 'l.bauer@firma.de',      role: 'Employee', department: 'Verwaltung', hasActiveOrder: false },
+  { id: '5', firstName: 'Jonas', lastName: 'Fischer',  email: 'j.fischer@firma.de',    role: 'Employee', department: 'Technik',    hasActiveOrder: false },
+  { id: '6', firstName: 'Maria', lastName: 'Hoffmann', email: 'm.hoffmann@firma.de',   role: 'Manager',  department: 'Vertrieb',   hasActiveOrder: true  },
+  { id: '7', firstName: 'Felix', lastName: 'Koch',     email: 'f.koch@firma.de',       role: 'Employee', department: 'Vertrieb',   hasActiveOrder: false },
+  { id: '8', firstName: 'Sara',  lastName: 'Becker',   email: 's.becker@firma.de',     role: 'Employee', department: 'Verwaltung', hasActiveOrder: true  },
 ]
 
-const ABTEILUNGEN = [...new Set(MOCK_MITARBEITER.map((m) => m.abteilung!))].sort()
+const DEPARTMENTS = [...new Set(MOCK_EMPLOYEES.map((m) => m.department!))].sort()
 
 type FilterKey = 'Alle' | 'HatAuftrag' | 'KeinAuftrag' | string
 
-const rolleVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
-  Admin:       'default',
-  Manager:     'secondary',
-  Mitarbeiter: 'outline',
+const roleLabel: Record<Role, string> = {
+  Admin:    'Admin',
+  Manager:  'Manager',
+  Employee: 'Mitarbeiter',
+}
+
+const roleVariant: Record<Role, 'default' | 'secondary' | 'outline'> = {
+  Admin:    'default',
+  Manager:  'secondary',
+  Employee: 'outline',
 }
 
 /* Each index gets a distinct strip gradient (from → to) + matching avatar bg */
@@ -43,20 +49,20 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterKey>('Alle')
 
-  const filtered = MOCK_MITARBEITER.filter((m) => {
+  const filtered = MOCK_EMPLOYEES.filter((m) => {
     const matchSearch =
       search === '' ||
-      `${m.vorname} ${m.nachname} ${m.email}`.toLowerCase().includes(search.toLowerCase())
+      `${m.firstName} ${m.lastName} ${m.email}`.toLowerCase().includes(search.toLowerCase())
     const matchFilter =
       filter === 'Alle' ||
-      (filter === 'HatAuftrag'  && m.hatAuftrag)  ||
-      (filter === 'KeinAuftrag' && !m.hatAuftrag) ||
-      m.abteilung === filter
+      (filter === 'HatAuftrag'  && m.hasActiveOrder)  ||
+      (filter === 'KeinAuftrag' && !m.hasActiveOrder) ||
+      m.department === filter
     return matchSearch && matchFilter
   })
 
-  const total      = MOCK_MITARBEITER.length
-  const mitAuftrag = MOCK_MITARBEITER.filter((m) => m.hatAuftrag).length
+  const total      = MOCK_EMPLOYEES.length
+  const mitAuftrag = MOCK_EMPLOYEES.filter((m) => m.hasActiveOrder).length
   const verfuegbar = total - mitAuftrag
 
   return (
@@ -114,7 +120,7 @@ export default function EmployeesPage() {
           />
         </div>
         <div className="flex flex-wrap gap-2">
-          {(['Alle', 'HatAuftrag', 'KeinAuftrag', ...ABTEILUNGEN] as FilterKey[]).map((f) => (
+          {(['Alle', 'HatAuftrag', 'KeinAuftrag', ...DEPARTMENTS] as FilterKey[]).map((f) => (
             <Button
               key={f}
               size="sm"
@@ -149,30 +155,30 @@ export default function EmployeesPage() {
                       className={cn('ring-2 ring-card shrink-0', theme.avatar)}
                     >
                       <AvatarFallback className={cn('text-base font-bold', theme.avatar)}>
-                        {m.vorname[0]}{m.nachname[0]}
+                        {m.firstName[0]}{m.lastName[0]}
                       </AvatarFallback>
                     </Avatar>
                     <span className={cn(
                       'mt-7 size-2.5 rounded-full ring-2 ring-card shrink-0',
-                      m.hatAuftrag ? 'bg-ring' : 'bg-success'
+                      m.hasActiveOrder ? 'bg-ring' : 'bg-success'
                     )} />
                   </div>
 
                   {/* Name + email */}
                   <div>
-                    <p className="font-semibold leading-tight">{m.vorname} {m.nachname}</p>
+                    <p className="font-semibold leading-tight">{m.firstName} {m.lastName}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">{m.email}</p>
                   </div>
 
                   {/* Rolle + Abteilung */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant={rolleVariant[m.rolle]}>{m.rolle}</Badge>
-                    <span className="text-xs text-muted-foreground">{m.abteilung}</span>
+                    <Badge variant={roleVariant[m.role]}>{roleLabel[m.role]}</Badge>
+                    <span className="text-xs text-muted-foreground">{m.department}</span>
                   </div>
 
                   {/* Status */}
                   <div className="border-t pt-2.5">
-                    {m.hatAuftrag ? (
+                    {m.hasActiveOrder ? (
                       <p className="text-xs font-semibold text-ring uppercase tracking-wide">Im Einsatz</p>
                     ) : (
                       <p className="text-xs font-semibold text-success uppercase tracking-wide">Verfügbar</p>

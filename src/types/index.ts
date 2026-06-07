@@ -1,37 +1,41 @@
-export type Rolle = 'Admin' | 'Manager' | 'Mitarbeiter'
+export type Role = 'Admin' | 'Manager' | 'Employee'
 
-export interface Benutzer {
+export interface User {
   id: string
-  vorname: string
-  nachname: string
+  firstName: string
+  lastName: string
   email: string
-  rolle: Rolle
-  abteilung?: string
+  role: Role
+  department?: string
 }
 
-export interface Stempelung {
+export interface TimeEntry {
   id: string
-  benutzerId: string
-  eingestempeltUm: string
-  ausgestempeltUm?: string
-  dauerMinuten?: number
+  userId: string
+  clockIn: string
+  clockOut?: string
+  durationMinutes?: number
 }
 
-export interface Auftrag {
+export type OrderStatus = 'Backlog' | 'InProgress' | 'ReadyForAcceptance' | 'Invoicing' | 'Done'
+
+export interface Order {
   id: string
-  titel: string
-  beschreibung?: string
-  kunde?: string
-  status: 'Backlog' | 'InBearbeitung' | 'BereitFuerAbnahme' | 'Rechnungserstellung' | 'Erledigt'
-  zugewiesenAn: string[]
-  erstelltAm: string
+  title: string
+  description?: string
+  customer?: string
+  status: OrderStatus
+  assignees: string[]
+  createdAt: string
 }
 
-export interface Urlaubsantrag {
+export type VacationStatus = 'Open' | 'Approved' | 'Rejected'
+
+export interface VacationRequest {
   id: string
-  benutzerId: string
-  von: string
-  bis: string
-  status: 'Offen' | 'Genehmigt' | 'Abgelehnt'
-  kommentar?: string
+  userId: string
+  startDate: string
+  endDate: string
+  status: VacationStatus
+  comment?: string
 }

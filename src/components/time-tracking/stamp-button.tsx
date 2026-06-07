@@ -11,26 +11,26 @@ function formatDuration(seconds: number) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-export function StempelButton() {
-  const [isStamped,  setIsStamped]  = useState(false)
-  const [startTime,  setStartTime]  = useState<number | null>(null)
-  const [elapsed,    setElapsed]    = useState(0)
+export function ClockButton() {
+  const [isClockedIn, setIsClockedIn] = useState(false)
+  const [startTime,   setStartTime]   = useState<number | null>(null)
+  const [elapsed,     setElapsed]     = useState(0)
 
   useEffect(() => {
-    if (!isStamped || startTime === null) return
+    if (!isClockedIn || startTime === null) return
     const interval = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startTime) / 1000))
     }, 1000)
     return () => clearInterval(interval)
-  }, [isStamped, startTime])
+  }, [isClockedIn, startTime])
 
   const handleToggle = () => {
-    if (isStamped) {
-      setIsStamped(false)
+    if (isClockedIn) {
+      setIsClockedIn(false)
       setStartTime(null)
       setElapsed(0)
     } else {
-      setIsStamped(true)
+      setIsClockedIn(true)
       setStartTime(Date.now())
       setElapsed(0)
     }
@@ -41,9 +41,9 @@ export function StempelButton() {
       {/* Elapsed time / status label */}
       <div className={cn(
         'text-sm font-medium tabular-nums tracking-wide transition-colors',
-        isStamped ? 'text-destructive' : 'text-muted-foreground'
+        isClockedIn ? 'text-destructive' : 'text-muted-foreground'
       )}>
-        {isStamped ? formatDuration(elapsed) : 'Nicht eingestempelt'}
+        {isClockedIn ? formatDuration(elapsed) : 'Nicht eingestempelt'}
       </div>
 
       {/* Circular CTA button */}
@@ -52,12 +52,12 @@ export function StempelButton() {
         className={cn(
           'flex flex-col items-center justify-center size-32 rounded-full border-2 cursor-pointer select-none',
           'transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-          isStamped
+          isClockedIn
             ? 'bg-destructive/10 border-destructive text-destructive stamp-active'
             : 'bg-success/10 border-success text-success hover:bg-success/20 active:scale-95'
         )}
       >
-        {isStamped ? (
+        {isClockedIn ? (
           <>
             <LogOut className="size-6 mb-1" />
             <span className="text-[0.6rem] font-bold uppercase tracking-widest">Ausstempeln</span>

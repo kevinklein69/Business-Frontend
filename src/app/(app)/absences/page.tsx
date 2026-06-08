@@ -305,30 +305,26 @@ export default function AbsencesPage() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{a.comment ?? '—'}</TableCell>
                       <TableCell className="text-right">
-                        {a.status === 'Open' ? (
-                          <div className="flex justify-end gap-1.5">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-success text-success hover:bg-success/10"
-                              disabled={updateStatus.isPending}
-                              onClick={() => updateStatus.mutate({ id: a.id, status: 'Approved' })}
-                            >
-                              Genehmigen
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-destructive text-destructive hover:bg-destructive/10"
-                              disabled={updateStatus.isPending}
-                              onClick={() => updateStatus.mutate({ id: a.id, status: 'Rejected' })}
-                            >
-                              Ablehnen
-                            </Button>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
+                        <div className="flex justify-end gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-success text-success hover:bg-success/10"
+                            disabled={updateStatus.isPending || a.status === 'Approved'}
+                            onClick={() => updateStatus.mutate({ id: a.id, status: 'Approved' })}
+                          >
+                            Genehmigen
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-destructive text-destructive hover:bg-destructive/10"
+                            disabled={updateStatus.isPending || a.status === 'Rejected'}
+                            onClick={() => updateStatus.mutate({ id: a.id, status: 'Rejected' })}
+                          >
+                            Ablehnen
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )

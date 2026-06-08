@@ -19,12 +19,10 @@ const navItems = [
   { href: '/time-tracking', label: 'Zeiterfassung', icon: Clock },
   { href: '/orders',       label: 'Aufträge',      icon: ClipboardList },
   { href: '/vacation',     label: 'Urlaub',        icon: CalendarDays },
-  { href: '/employees',    label: 'Mitarbeiter',   icon: Users },
 ]
 
-const managerNavItems = [
-  { href: '/absences',     label: 'Fehlzeiten',    icon: Stethoscope },
-]
+const absencesItem = { href: '/absences',  label: 'Fehlzeiten',  icon: Stethoscope }
+const employeesItem = { href: '/employees', label: 'Mitarbeiter', icon: Users }
 
 const settingsItem = { href: '/settings', label: 'Einstellungen', icon: Settings }
 
@@ -32,7 +30,9 @@ export function Sidebar() {
   const pathname = usePathname()
   const showManagerNav = useIsManager()
 
-  const items = showManagerNav ? [...navItems, ...managerNavItems] : navItems
+  const items = showManagerNav
+    ? [...navItems, absencesItem, employeesItem]
+    : [...navItems, employeesItem]
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 

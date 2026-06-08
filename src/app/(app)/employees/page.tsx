@@ -9,7 +9,9 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { useEmployees } from '@/hooks/use-employees'
-import type { Role } from '@/types'
+import { useIsManager } from '@/lib/auth'
+import { AssignOrdersDialog } from '@/components/employees/assign-orders-dialog'
+import type { Employee, Role } from '@/types'
 
 type FilterKey = 'Alle' | 'HatAuftrag' | 'KeinAuftrag' | string
 
@@ -36,7 +38,9 @@ const cardThemes = [
 export default function EmployeesPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterKey>('Alle')
+  const [assigningEmployee, setAssigningEmployee] = useState<Employee | null>(null)
 
+  const isManager = useIsManager()
   const { data: employees, isLoading, isError } = useEmployees()
   const list = employees ?? []
 
@@ -175,11 +179,16 @@ export default function EmployeesPage() {
                   </div>
 
                   {/* Status */}
-                  <div className="border-t pt-2.5">
+                  <div className="border-t pt-2.5 flex items-center justify-between gap-2">
                     {m.hasActiveOrder ? (
                       <p className="text-xs font-semibold text-ring uppercase tracking-wide">Im Einsatz</p>
                     ) : (
                       <p className="text-xs font-semibold text-success uppercase tracking-wide">Verfügbar</p>
+                    )}
+                    {isManager && (
+                      <Button size="xs" variant="outline" onClick={() => setAssigningEmployee(m)}>
+                        <ClipboardList className="size-3" /> Zuweisen
+                      </Button>
                     )}
                   </div>
                 </CardContent>
@@ -189,6 +198,10 @@ export default function EmployeesPage() {
         </div>
       )}
       </>
+      )}
+
+      {assigningEmployee && (
+        <AssignOrdersDialog employee={assigningEmployee} onClose={() => setAssigningEmployee(null)} />
       )}
     </div>
   )

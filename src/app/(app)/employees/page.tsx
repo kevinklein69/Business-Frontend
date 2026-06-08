@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Users, ClipboardList, CheckCircle2 } from 'lucide-react'
+import { Search, Users, ClipboardList, CheckCircle2, Pencil, Trash2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,8 @@ import { useEmployees } from '@/hooks/use-employees'
 import { useIsAdmin, useIsManager } from '@/lib/auth'
 import { AssignOrdersDialog } from '@/components/employees/assign-orders-dialog'
 import { CreateEmployeeDialog } from '@/components/employees/create-employee-dialog'
+import { EditEmployeeDialog } from '@/components/employees/edit-employee-dialog'
+import { DeleteEmployeeDialog } from '@/components/employees/delete-employee-dialog'
 import type { Employee, Role } from '@/types'
 
 type FilterKey = 'Alle' | 'HatAuftrag' | 'KeinAuftrag' | string
@@ -40,6 +42,8 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterKey>('Alle')
   const [assigningEmployee, setAssigningEmployee] = useState<Employee | null>(null)
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
+  const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null)
 
   const isManager = useIsManager()
   const isAdmin = useIsAdmin()
@@ -155,7 +159,7 @@ export default function EmployeesPage() {
                 <div className={cn('h-12 bg-gradient-to-br shrink-0', theme.strip)} />
 
                 <CardContent className="flex flex-col gap-3 px-4 pb-4 pt-0 -mt-6">
-                  {/* Avatar overlapping strip + status dot */}
+                  {/* Avatar overlapping strip */}
                   <div className="flex items-start justify-between">
                     <Avatar
                       size="lg"
@@ -165,10 +169,28 @@ export default function EmployeesPage() {
                         {m.firstName[0]}{m.lastName[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <span className={cn(
-                      'mt-7 size-2.5 rounded-full ring-2 ring-card shrink-0',
-                      m.hasActiveOrder ? 'bg-ring' : 'bg-success'
-                    )} />
+                    <div className="mt-7 flex items-center gap-2">
+                      {isAdmin && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setEditingEmployee(m)}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label="Mitarbeiter bearbeiten"
+                          >
+                            <Pencil className="size-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingEmployee(m)}
+                            className="text-muted-foreground hover:text-destructive transition-colors"
+                            aria-label="Mitarbeiter löschen"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   {/* Name + email */}
@@ -207,6 +229,14 @@ export default function EmployeesPage() {
 
       {assigningEmployee && (
         <AssignOrdersDialog employee={assigningEmployee} onClose={() => setAssigningEmployee(null)} />
+      )}
+
+      {editingEmployee && (
+        <EditEmployeeDialog employee={editingEmployee} onClose={() => setEditingEmployee(null)} />
+      )}
+
+      {deletingEmployee && (
+        <DeleteEmployeeDialog employee={deletingEmployee} onClose={() => setDeletingEmployee(null)} />
       )}
     </div>
   )

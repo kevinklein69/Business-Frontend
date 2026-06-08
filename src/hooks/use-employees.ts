@@ -31,3 +31,34 @@ export function useCreateEmployee() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['employees'] }),
   })
 }
+
+export interface UpdateEmployeeInput {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  role: Role
+  department?: string
+  password?: string
+}
+
+export function useUpdateEmployee() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...input }: UpdateEmployeeInput) => {
+      const res = await apiClient.put<Employee>(`/api/employees/${id}`, input)
+      return res.data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['employees'] }),
+  })
+}
+
+export function useDeleteEmployee() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.delete(`/api/employees/${id}`)
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['employees'] }),
+  })
+}

@@ -1,20 +1,25 @@
 'use client'
 
 import { useState } from 'react'
-import { User, Bell, Shield, Palette, ChevronRight } from 'lucide-react'
+import { User, Bell, Shield, Palette, Building2, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { useIsAdmin } from '@/lib/auth'
+import { useCompanySettings, useUpdateCompanySettings } from '@/hooks/use-company-settings'
+import { GERMAN_STATES, GERMAN_STATE_LABELS, type GermanState } from '@/lib/holidays'
 
 const SECTIONS = [
-  { key: 'profil',          label: 'Profil',            icon: User,    desc: 'Name, E-Mail, Avatar' },
-  { key: 'benachrichtigungen', label: 'Benachrichtigungen', icon: Bell, desc: 'Push, E-Mail, In-App' },
-  { key: 'rollen',          label: 'Rollen & Zugriff',  icon: Shield,  desc: 'Berechtigungen verwalten' },
-  { key: 'darstellung',     label: 'Darstellung',       icon: Palette, desc: 'Farben, Schriftgröße' },
+  { key: 'profil',          label: 'Profil',            icon: User,     desc: 'Name, E-Mail, Avatar' },
+  { key: 'benachrichtigungen', label: 'Benachrichtigungen', icon: Bell,  desc: 'Push, E-Mail, In-App' },
+  { key: 'unternehmen',     label: 'Unternehmen',       icon: Building2, desc: 'Standort, Feiertage' },
+  { key: 'rollen',          label: 'Rollen & Zugriff',  icon: Shield,   desc: 'Berechtigungen verwalten' },
+  { key: 'darstellung',     label: 'Darstellung',       icon: Palette,  desc: 'Farben, Schriftgröße' },
 ]
 
 type NotifKey = 'stempel' | 'auftrag' | 'urlaub' | 'system'
@@ -146,6 +151,8 @@ export default function SettingsPage() {
             </Card>
           )}
 
+          {active === 'unternehmen' && <UnternehmenSection />}
+
           {active === 'rollen' && (
             <Card>
               <CardHeader>
@@ -209,5 +216,66 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function UnternehmenSection() {
+  const isAdmin = useIsAdmin()
+  const { data: settings, isLoading } = useCompanySettings()
+  const updateSettings = useUpdateCompanySettings()
+
+  const [draft, setDraft] = useState<GermanState | null>(null)
+  const selected = draft ?? settings?.state
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <Building2 className="size-4" />
+          Unternehmen
+        </CardTitle>
+        <CardDescription>Standort der Firma — bestimmt, welche gesetzlichen Feiertage bei Urlaubsanträgen berücksichtigt werden</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-6">
+        <div className="flex flex-col gap-1.5 sm:max-w-xs">
+          <Label>Bundesland</Label>
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Lädt…</p>
+          ) : (
+            <Select
+              value={selected}
+              onValueChange={(v) => setDraft(v as GermanState)}
+              disabled={!isAdmin}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Bundesland wählen…" />
+              </SelectTrigger>
+              <SelectContent>
+                {GERMAN_STATES.map((s) => (
+                  <SelectItem key={s} value={s}>{GERMAN_STATE_LABELS[s]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {isAdmin
+              ? 'Gilt für die gesamte Firma und wirkt sich auf die Urlaubstage-Berechnung aller Mitarbeiter aus.'
+              : 'Wird von einem Admin festgelegt und gilt für die gesamte Firma.'}
+          </p>
+        </div>
+
+        {isAdmin && (
+          <Button
+            className="self-start"
+            disabled={draft === null || draft === settings?.state || updateSettings.isPending}
+            onClick={() => {
+              if (draft) updateSettings.mutate(draft, { onSuccess: () => setDraft(null) })
+            }}
+          >
+            Änderungen speichern
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   )
 }

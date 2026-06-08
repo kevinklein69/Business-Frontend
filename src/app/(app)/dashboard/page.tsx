@@ -1,8 +1,17 @@
+'use client'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ClockButton } from '@/components/time-tracking/stamp-button'
-import { ClipboardList, CalendarCheck, TrendingUp, Timer } from 'lucide-react'
+import { ClipboardList, CalendarCheck, TrendingUp, Timer, PartyPopper } from 'lucide-react'
+import { useCompanySettings } from '@/hooks/use-company-settings'
+import { getNextHoliday } from '@/lib/holidays'
+import { differenceInCalendarDays, format } from 'date-fns'
 
 export default function DashboardPage() {
+  const { data: companySettings } = useCompanySettings()
+  const nextHoliday = companySettings ? getNextHoliday(new Date(), companySettings.state) : null
+  const daysUntil = nextHoliday ? differenceInCalendarDays(nextHoliday.date, new Date()) : null
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
@@ -19,7 +28,7 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -56,6 +65,30 @@ export default function DashboardPage() {
           <CardContent>
             <p className="text-3xl font-bold">+2:30</p>
             <p className="text-sm text-muted-foreground mt-1">Zeitkonto-Saldo</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <PartyPopper className="size-4" />
+              Nächster Feiertag
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {nextHoliday ? (
+              <>
+                <p className="text-3xl font-bold">{format(nextHoliday.date, 'dd.MM.')}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {nextHoliday.name}
+                  {daysUntil !== null && (
+                    <> · {daysUntil === 0 ? 'heute' : daysUntil === 1 ? 'morgen' : `in ${daysUntil} Tagen`}</>
+                  )}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Lädt…</p>
+            )}
           </CardContent>
         </Card>
       </div>

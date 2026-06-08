@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import type { DateRange } from 'react-day-picker'
-import { format, differenceInBusinessDays } from 'date-fns'
+import { format } from 'date-fns'
 import { useCreateAbsenceRequest, useAbsenceRequests } from '@/hooks/use-absences'
+import { useCompanySettings } from '@/hooks/use-company-settings'
+import { countWorkingDays } from '@/lib/holidays'
 import { de } from 'date-fns/locale'
 import { CalendarDays, CheckCircle2, Clock, XCircle, PalmtreeIcon } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -42,6 +44,7 @@ const statusConfig: Record<AbsenceRequest['status'], {
 
 export default function VacationPage() {
   const { data: allRequests = [], isLoading } = useAbsenceRequests()
+  const { data: companySettings } = useCompanySettings()
   const createRequest = useCreateAbsenceRequest()
   const [range,    setRange]    = useState<DateRange | undefined>(undefined)
   const [comment,  setComment]  = useState('')
@@ -58,8 +61,8 @@ export default function VacationPage() {
   const usedPct       = Math.round((approvedDays / TOTAL_DAYS) * 100)
 
   const selectedDays =
-    range?.from && range?.to
-      ? differenceInBusinessDays(range.to, range.from) + 1
+    range?.from && range?.to && companySettings
+      ? countWorkingDays(range.from, range.to, companySettings.state)
       : null
 
   const handleSubmit = () => {

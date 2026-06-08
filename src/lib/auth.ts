@@ -34,6 +34,8 @@ export const isManager = () => {
   return role === 'Admin' || role === 'Manager'
 }
 
+export const isAdmin = () => getRole() === 'Admin'
+
 const noopSubscribe = () => () => {}
 
 /** SSR-safe read of the current user's manager status from the JWT in localStorage.
@@ -41,3 +43,6 @@ const noopSubscribe = () => () => {}
  *  so we read it through useSyncExternalStore rather than effect+setState. */
 export const useIsManager = () =>
   React.useSyncExternalStore(noopSubscribe, isManager, () => false)
+
+export const useIsAdmin = () =>
+  React.useSyncExternalStore(noopSubscribe, isAdmin, () => false)

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { DateRange } from 'react-day-picker'
-import { format, differenceInBusinessDays } from 'date-fns'
+import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import {
   CalendarDays, CheckCircle2, Clock, XCircle,
@@ -28,6 +28,8 @@ import { useEmployees } from '@/hooks/use-employees'
 import {
   useRecordAbsence, useTeamAbsences, useUpdateAbsenceRequestStatus,
 } from '@/hooks/use-absences'
+import { useCompanySettings } from '@/hooks/use-company-settings'
+import { countWorkingDays } from '@/lib/holidays'
 import { isManager } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 import type { AbsenceRequest, AbsenceType } from '@/types'
@@ -75,6 +77,7 @@ export default function AbsencesPage() {
 
   const { data: employees = [] }      = useEmployees()
   const { data: requests = [], isLoading } = useTeamAbsences()
+  const { data: companySettings } = useCompanySettings()
   const recordAbsence    = useRecordAbsence()
   const updateStatus     = useUpdateAbsenceRequestStatus()
 
@@ -89,8 +92,8 @@ export default function AbsencesPage() {
   const [comment,    setComment]    = useState('')
 
   const selectedDays =
-    range?.from && range?.to
-      ? differenceInBusinessDays(range.to, range.from) + 1
+    range?.from && range?.to && companySettings
+      ? countWorkingDays(range.from, range.to, companySettings.state)
       : null
 
   const openVacationRequests = requests.filter((r) => r.type === 'Vacation' && r.status === 'Open')

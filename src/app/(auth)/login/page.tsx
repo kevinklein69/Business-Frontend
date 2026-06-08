@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { setToken } from '@/lib/auth'
 import { apiClient } from '@/lib/api-client'
+import { Logo, LogoMark } from '@/components/brand/logo'
 
 const loginSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
@@ -49,9 +50,12 @@ export default function LoginPage() {
 
       {/* Left — brand panel */}
       <div className="hidden lg:flex flex-col justify-between bg-[#1b263b] text-white p-12">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Betrieb-App</h1>
-          <p className="text-[#778da9] text-sm mt-1">Betriebsverwaltung leicht gemacht</p>
+        <div className="flex items-center gap-3.5">
+          <LogoMark onDark className="size-12 shrink-0 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]" />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight leading-none">Betrieb-App</h1>
+            <p className="text-[#778da9] text-sm mt-1.5">Betriebsverwaltung leicht gemacht</p>
+          </div>
         </div>
         <div className="flex flex-col gap-6">
           {FEATURES.map(({ icon: Icon, text }) => (
@@ -71,8 +75,8 @@ export default function LoginPage() {
         <div className="w-full max-w-sm flex flex-col gap-8">
 
           {/* Mobile header */}
-          <div className="lg:hidden text-center">
-            <h1 className="text-2xl font-bold">Betrieb-App</h1>
+          <div className="lg:hidden flex justify-center">
+            <Logo markClassName="size-9" textClassName="text-2xl font-bold" />
           </div>
 
           <div className="flex flex-col gap-2">

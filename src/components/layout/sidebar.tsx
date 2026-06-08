@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useIsManager } from '@/lib/auth'
+import { Logo } from '@/components/brand/logo'
 
 const navItems = [
   { href: '/dashboard',    label: 'Dashboard',    icon: LayoutDashboard },
@@ -39,11 +40,8 @@ export function Sidebar() {
   return (
     <aside className="w-56 shrink-0 flex flex-col border-r bg-sidebar text-sidebar-foreground h-full">
       {/* Logo / brand */}
-      <div className="flex items-center gap-3 h-14 px-4 border-b border-sidebar-border">
-        <div className="flex items-center justify-center size-7 rounded-md bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold tracking-tight select-none">
-          BA
-        </div>
-        <span className="font-semibold text-base tracking-tight">Betrieb-App</span>
+      <div className="flex items-center h-14 px-4 border-b border-sidebar-border">
+        <Logo onDark markClassName="size-7" textClassName="text-base" />
       </div>
 
       {/* Main nav */}

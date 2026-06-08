@@ -46,3 +46,7 @@ export const useIsManager = () =>
 
 export const useIsAdmin = () =>
   React.useSyncExternalStore(noopSubscribe, isAdmin, () => false)
+
+/** SSR-safe read of the login state, mirroring useIsManager — see its comment for why. */
+export const useIsLoggedIn = () =>
+  React.useSyncExternalStore(noopSubscribe, isLoggedIn, () => false)

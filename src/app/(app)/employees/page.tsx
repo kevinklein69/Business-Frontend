@@ -9,8 +9,9 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { useEmployees } from '@/hooks/use-employees'
-import { useIsManager } from '@/lib/auth'
+import { useIsAdmin, useIsManager } from '@/lib/auth'
 import { AssignOrdersDialog } from '@/components/employees/assign-orders-dialog'
+import { CreateEmployeeDialog } from '@/components/employees/create-employee-dialog'
 import type { Employee, Role } from '@/types'
 
 type FilterKey = 'Alle' | 'HatAuftrag' | 'KeinAuftrag' | string
@@ -41,6 +42,7 @@ export default function EmployeesPage() {
   const [assigningEmployee, setAssigningEmployee] = useState<Employee | null>(null)
 
   const isManager = useIsManager()
+  const isAdmin = useIsAdmin()
   const { data: employees, isLoading, isError } = useEmployees()
   const list = employees ?? []
 
@@ -64,7 +66,10 @@ export default function EmployeesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Mitarbeiter</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold tracking-tight">Mitarbeiter</h1>
+        {isAdmin && <CreateEmployeeDialog />}
+      </div>
 
       {isLoading && <p className="text-muted-foreground text-sm py-10 text-center">Lade Mitarbeiter…</p>}
       {isError && <p className="text-destructive text-sm py-10 text-center">Mitarbeiter konnten nicht geladen werden.</p>}

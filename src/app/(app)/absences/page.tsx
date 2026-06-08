@@ -19,6 +19,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import {
+  Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList,
+} from '@/components/ui/combobox'
+import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { useEmployees } from '@/hooks/use-employees'
@@ -74,6 +77,11 @@ export default function AbsencesPage() {
   const { data: requests = [], isLoading } = useTeamAbsences()
   const recordAbsence    = useRecordAbsence()
   const updateStatus     = useUpdateAbsenceRequestStatus()
+
+  const employeeLabel = (id: string) => {
+    const employee = employees.find((e) => e.id === id)
+    return employee ? `${employee.firstName} ${employee.lastName}` : id
+  }
 
   const [employeeId, setEmployeeId] = useState<string>('')
   const [type,       setType]       = useState<AbsenceType>('Sick')
@@ -147,99 +155,104 @@ export default function AbsencesPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[auto_1fr]">
+      <div className="flex flex-col gap-6">
 
         {/* Record form */}
-        <Card className="w-full xl:w-80">
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Stethoscope className="size-4" />
               Abwesenheit erfassen
             </CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="employee">Mitarbeiter</Label>
-              <Select value={employeeId} onValueChange={(v) => setEmployeeId(v as string)}>
-                <SelectTrigger id="employee" className="w-full">
-                  <SelectValue placeholder="Mitarbeiter wählen…">
-                    {(value: string | null) => {
-                      const employee = employees.find((e) => e.id === value)
-                      return employee ? `${employee.firstName} ${employee.lastName}` : 'Mitarbeiter wählen…'
-                    }}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {employees?.map((e) => (
-                    <SelectItem key={e.id} value={e.id}>
-                      {e.firstName} {e.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="type">Art der Abwesenheit</Label>
-              <Select value={type} onValueChange={(v) => setType(v as AbsenceType)}>
-                <SelectTrigger id="type" className="w-full">
-                  <SelectValue placeholder="Typ wählen…">
-                    {(value: AbsenceType | null) =>
-                      value ? (
-                        <span className="flex items-center gap-2">{typeIcon[value]} {typeLabel[value]}</span>
-                      ) : (
-                        'Typ wählen…'
-                      )
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {recordableTypes.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      <span className="flex items-center gap-2">{typeIcon[t]} {typeLabel[t]}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Calendar
-              mode="range"
-              selected={range}
-              onSelect={setRange}
-              locale={de}
-            />
-
-            {selectedDays !== null && (
-              <div className="flex items-center justify-between rounded-lg bg-muted px-3 py-2">
-                <span className="text-sm text-muted-foreground">
-                  {format(range!.from!, 'dd.MM.yyyy')}
-                  {range?.to ? ` – ${format(range.to, 'dd.MM.yyyy')}` : ''}
-                </span>
-                <Badge variant="secondary">{selectedDays} Tage</Badge>
+          <CardContent className="flex flex-col gap-6 lg:flex-row">
+            <div className="flex w-full flex-col gap-4 lg:w-80 lg:shrink-0">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="employee">Mitarbeiter</Label>
+                <Combobox
+                  items={employees.map((e) => e.id)}
+                  itemToStringLabel={employeeLabel}
+                  value={employeeId || null}
+                  onValueChange={(v) => setEmployeeId((v as string | null) ?? '')}
+                >
+                  <ComboboxInput id="employee" placeholder="Mitarbeiter suchen…" className="w-full" />
+                  <ComboboxContent>
+                    <ComboboxEmpty>Keine Mitarbeiter gefunden</ComboboxEmpty>
+                    <ComboboxList>
+                      {(item: string) => (
+                        <ComboboxItem key={item} value={item}>
+                          {employeeLabel(item)}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
               </div>
-            )}
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="comment">Kommentar (optional)</Label>
-              <Input
-                id="comment"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="z.B. Grippaler Infekt"
-              />
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="type">Art der Abwesenheit</Label>
+                <Select value={type} onValueChange={(v) => setType(v as AbsenceType)}>
+                  <SelectTrigger id="type" className="w-full">
+                    <SelectValue placeholder="Typ wählen…">
+                      {(value: AbsenceType | null) =>
+                        value ? (
+                          <span className="flex items-center gap-2">{typeIcon[value]} {typeLabel[value]}</span>
+                        ) : (
+                          'Typ wählen…'
+                        )
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {recordableTypes.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        <span className="flex items-center gap-2">{typeIcon[t]} {typeLabel[t]}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="comment">Kommentar (optional)</Label>
+                <Input
+                  id="comment"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="z.B. Grippaler Infekt"
+                />
+              </div>
+
+              <Button
+                onClick={handleSubmit}
+                disabled={!employeeId || !range?.from || !range?.to || recordAbsence.isPending}
+                className="w-full"
+              >
+                Eintragen
+              </Button>
+              <p className="text-xs text-muted-foreground -mt-2">
+                Der Eintrag gilt sofort als bestätigt und zählt mit 8h pro Tag in der Zeiterfassung.
+              </p>
             </div>
 
-            <Button
-              onClick={handleSubmit}
-              disabled={!employeeId || !range?.from || !range?.to || recordAbsence.isPending}
-              className="w-full"
-            >
-              Eintragen
-            </Button>
-            <p className="text-xs text-muted-foreground -mt-2">
-              Der Eintrag gilt sofort als bestätigt und zählt mit 8h pro Tag in der Zeiterfassung.
-            </p>
+            <div className="flex flex-1 flex-col gap-4">
+              <Calendar
+                mode="range"
+                selected={range}
+                onSelect={setRange}
+                locale={de}
+              />
+
+              {selectedDays !== null && (
+                <div className="flex items-center justify-between rounded-lg bg-muted px-3 py-2">
+                  <span className="text-sm text-muted-foreground">
+                    {format(range!.from!, 'dd.MM.yyyy')}
+                    {range?.to ? ` – ${format(range.to, 'dd.MM.yyyy')}` : ''}
+                  </span>
+                  <Badge variant="secondary">{selectedDays} Tage</Badge>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 

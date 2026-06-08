@@ -1,4 +1,4 @@
-# Betrieb-App Frontend — Next.js 14 + shadcn/ui
+# Betrieb-App Frontend — Next.js 16 + shadcn/ui
 
 Modernes Frontend für die Betrieb-App, gebaut mit Next.js (App Router), TypeScript, Tailwind CSS und shadcn/ui.
 
@@ -72,27 +72,37 @@ Weitere Demo-Konten (z. B. für andere Rollen) finden sich in `Business-Backend/
 ## Projektstruktur
 
 ```
-betrieb-app/
-└── src/
-    ├── app/                    # Next.js App Router Pages
-    │   ├── (auth)/login/       # Login-Seite
-    │   ├── dashboard/          # Stempeluhr-Dashboard
-    │   ├── auftraege/          # Kanban-Board, Backlog, Monatsplan
-    │   ├── urlaub/             # Urlaubskalender
-    │   ├── mitarbeiter/        # Mitarbeiterübersicht
-    │   └── einstellungen/      # Admin-Einstellungen
-    ├── components/
-    │   ├── layout/             # Sidebar, Header, MainLayout
-    │   ├── zeiterfassung/      # StempelButton, ZeitkontoCard
-    │   ├── auftraege/          # KanbanBoard, AuftragCard
-    │   ├── mitarbeiter/        # MitarbeiterTable
-    │   └── ui/                 # shadcn/ui Komponenten (auto-generiert)
-    ├── hooks/                  # TanStack React Query Hooks (use-employees, use-orders, ...)
-    ├── lib/
-    │   ├── api-client.ts       # Axios Instance mit JWT-Auth
-    │   └── utils.ts            # cn() und Hilfsfunktionen
-    └── types/
-        └── index.ts            # API-Typen (gespiegelt von den Backend-DTOs)
+src/
+├── app/
+│   ├── (auth)/login/       # Login-Seite (eigenes Layout, kein Sidebar/Header)
+│   ├── (app)/              # Geschützter Bereich (Auth-Check im layout.tsx)
+│   │   ├── dashboard/      # Stempeluhr-Dashboard
+│   │   ├── orders/         # Kanban-Board, Backlog, Monatsplan
+│   │   ├── time-tracking/  # Zeiterfassung
+│   │   ├── absences/       # Fehlzeiten
+│   │   ├── vacation/       # Urlaubskalender
+│   │   ├── employees/      # Mitarbeiterübersicht (anlegen/bearbeiten/löschen, Zuweisung)
+│   │   ├── settings/       # Admin-Einstellungen
+│   │   ├── layout.tsx      # Sidebar + Header + Auth-Gate
+│   │   ├── loading.tsx     # Route-Loading-State
+│   │   └── error.tsx       # Route-Error-Boundary
+│   ├── not-found.tsx       # 404-Seite
+│   └── providers.tsx       # React Query Provider
+├── components/
+│   ├── layout/             # Sidebar, Header
+│   ├── employees/          # Create/Edit/Delete-Dialoge, Auftragszuweisung
+│   ├── orders/             # KanbanBoard, OrderCard
+│   ├── time-tracking/      # Stempel-Button, Zeitkonto
+│   ├── brand/              # Logo/Branding
+│   └── ui/                 # shadcn/ui Komponenten (auto-generiert)
+├── hooks/                  # TanStack React Query Hooks (use-employees, use-orders, use-absences, ...)
+├── lib/
+│   ├── api-client.ts       # Axios Instance mit JWT-Auth
+│   ├── auth.ts             # Login-State, Rollen-Hooks (useIsAdmin, useIsManager, ...)
+│   ├── holidays.ts         # Feiertagsberechnung je Bundesland
+│   └── utils.ts            # cn() und Hilfsfunktionen
+└── types/
+    └── index.ts            # API-Typen (gespiegelt von den Backend-DTOs)
 ```
 
 ## Troubleshooting

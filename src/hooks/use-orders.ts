@@ -7,6 +7,13 @@ export interface UpsertOrderInput {
   description?: string
   customer?: string
   assigneeIds: string[]
+  revenue?: number | null
+  invoiceDate?: string | null
+  estimatedHours?: number | null
+  plannedStartDate?: string | null
+  plannedEndDate?: string | null
+  actualHours?: number | null
+  deviationReason?: string | null
 }
 
 export function useOrders() {

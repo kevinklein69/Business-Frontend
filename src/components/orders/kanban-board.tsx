@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, User, Building2, Search, Check } from 'lucide-react'
+import { Plus, User, Building2, Search, Check, CalendarRange, Euro, AlertTriangle } from 'lucide-react'
 import { format } from 'date-fns'
 import {
   DndContext, DragOverlay, PointerSensor,
@@ -35,6 +35,16 @@ function initials(name: string) {
   return name.split(' ').map((n) => n[0]).join('').toUpperCase()
 }
 
+const currencyFormatter = new Intl.NumberFormat('de-DE', {
+  style: 'currency',
+  currency: 'EUR',
+  maximumFractionDigits: 0,
+})
+
+function shortDate(date: string) {
+  return format(new Date(date), 'dd.MM.')
+}
+
 // ── Detail Dialog ─────────────────────────────────────────────────────────────
 
 function OrderDetailDialog({
@@ -48,13 +58,25 @@ function OrderDetailDialog({
   employees: Employee[]
   open: boolean
   onClose: () => void
-  onSave: (updated: { title: string; customer?: string; description?: string; assigneeIds: string[] }) => void
+  onSave: (updated: {
+    title: string; customer?: string; description?: string; assigneeIds: string[]
+    revenue?: number; invoiceDate?: string; estimatedHours?: number
+    plannedStartDate?: string; plannedEndDate?: string; actualHours?: number
+    deviationReason?: string
+  }) => void
 }) {
-  const [title,          setTitle]          = useState(order.title)
-  const [customer,       setCustomer]       = useState(order.customer ?? '')
-  const [description,    setDescription]    = useState(order.description ?? '')
-  const [assignees,      setAssignees]      = useState<Assignee[]>(order.assignees)
-  const [assigneeSearch, setAssigneeSearch] = useState('')
+  const [title,            setTitle]            = useState(order.title)
+  const [customer,         setCustomer]         = useState(order.customer ?? '')
+  const [description,      setDescription]      = useState(order.description ?? '')
+  const [assignees,        setAssignees]        = useState<Assignee[]>(order.assignees)
+  const [assigneeSearch,   setAssigneeSearch]   = useState('')
+  const [revenue,          setRevenue]          = useState(order.revenue?.toString() ?? '')
+  const [invoiceDate,      setInvoiceDate]      = useState(order.invoiceDate ?? '')
+  const [estimatedHours,   setEstimatedHours]   = useState(order.estimatedHours?.toString() ?? '')
+  const [plannedStartDate, setPlannedStartDate] = useState(order.plannedStartDate ?? '')
+  const [plannedEndDate,   setPlannedEndDate]   = useState(order.plannedEndDate ?? '')
+  const [actualHours,      setActualHours]      = useState(order.actualHours?.toString() ?? '')
+  const [deviationReason,  setDeviationReason]  = useState(order.deviationReason ?? '')
 
   const filteredEmployees = employees.filter((m) =>
     `${m.firstName} ${m.lastName}`.toLowerCase().includes(assigneeSearch.toLowerCase())
@@ -67,12 +89,22 @@ function OrderDetailDialog({
         : [...prev, { id: employee.id, name: `${employee.firstName} ${employee.lastName}` }]
     )
 
+  const num = (s: string) => (s.trim() === '' ? undefined : parseFloat(s))
+  const str = (s: string) => (s.trim() === '' ? undefined : s)
+
   const handleSave = () => {
     onSave({
       title:       title.trim() || order.title,
       customer:    customer.trim() || undefined,
       description: description.trim() || undefined,
       assigneeIds: assignees.map((a) => a.id),
+      revenue:          num(revenue),
+      invoiceDate:      str(invoiceDate),
+      estimatedHours:   num(estimatedHours),
+      plannedStartDate: str(plannedStartDate),
+      plannedEndDate:   str(plannedEndDate),
+      actualHours:      num(actualHours),
+      deviationReason:  str(deviationReason),
     })
     onClose()
   }
@@ -87,7 +119,7 @@ function OrderDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Auftrag bearbeiten</DialogTitle>
         </DialogHeader>
@@ -129,6 +161,102 @@ function OrderDetailDialog({
               rows={3}
               className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base resize-none outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 placeholder:text-muted-foreground"
             />
+          </div>
+
+          {/* Zeitplanung */}
+          <div className="flex flex-col gap-3 border-t pt-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+              <CalendarRange className="size-3.5" /> Zeitplanung
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="d-planned-start">Geplanter Start</Label>
+                <Input
+                  id="d-planned-start"
+                  type="date"
+                  value={plannedStartDate}
+                  onChange={(e) => setPlannedStartDate(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="d-planned-end">Geplantes Ende</Label>
+                <Input
+                  id="d-planned-end"
+                  type="date"
+                  value={plannedEndDate}
+                  onChange={(e) => setPlannedEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="d-estimated-hours">Soll-Stunden</Label>
+                <Input
+                  id="d-estimated-hours"
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  placeholder="z.B. 8"
+                  value={estimatedHours}
+                  onChange={(e) => setEstimatedHours(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="d-actual-hours">Ist-Stunden</Label>
+                <Input
+                  id="d-actual-hours"
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  placeholder="z.B. 9.5"
+                  value={actualHours}
+                  onChange={(e) => setActualHours(e.target.value)}
+                />
+              </div>
+            </div>
+            {actualHours.trim() !== '' && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="d-deviation-reason">Abweichungsgrund</Label>
+                <textarea
+                  id="d-deviation-reason"
+                  value={deviationReason}
+                  onChange={(e) => setDeviationReason(e.target.value)}
+                  placeholder="Grund für Abweichung von der Zeitprognose (optional)…"
+                  rows={2}
+                  className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base resize-none outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 placeholder:text-muted-foreground"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Abrechnung */}
+          <div className="flex flex-col gap-3 border-t pt-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+              <Euro className="size-3.5" /> Abrechnung
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="d-revenue">Umsatz (€)</Label>
+                <Input
+                  id="d-revenue"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="z.B. 1500"
+                  value={revenue}
+                  onChange={(e) => setRevenue(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="d-invoice-date">Rechnungsdatum</Label>
+                <Input
+                  id="d-invoice-date"
+                  type="date"
+                  value={invoiceDate}
+                  onChange={(e) => setInvoiceDate(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Mitarbeiter */}
@@ -207,6 +335,14 @@ function KanbanCard({
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: order.id })
 
+  const hasDeviation =
+    order.status === 'Done' &&
+    order.estimatedHours != null &&
+    order.actualHours != null &&
+    Math.abs(order.actualHours - order.estimatedHours) > 0.01
+
+  const hasPlannedRange = !!(order.plannedStartDate || order.plannedEndDate)
+
   return (
     <div
       ref={setNodeRef}
@@ -227,7 +363,8 @@ function KanbanCard({
           <CardTitle className="text-sm leading-snug">{order.title}</CardTitle>
         </CardHeader>
 
-        {(order.customer || order.description || order.assignees.length > 0) && (
+        {(order.customer || order.description || order.assignees.length > 0
+          || order.revenue != null || hasPlannedRange || hasDeviation) && (
           <CardContent className="flex flex-col gap-2">
             {order.customer && (
               <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -237,6 +374,34 @@ function KanbanCard({
             )}
             {order.description && (
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
+            )}
+            {(order.revenue != null || hasPlannedRange || hasDeviation) && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {order.revenue != null && (
+                  <Badge variant="outline" className="gap-1 text-xs font-normal">
+                    <Euro className="size-3" />
+                    {currencyFormatter.format(order.revenue)}
+                  </Badge>
+                )}
+                {hasPlannedRange && (
+                  <Badge variant="outline" className="gap-1 text-xs font-normal">
+                    <CalendarRange className="size-3" />
+                    {order.plannedStartDate ? shortDate(order.plannedStartDate) : '?'}
+                    {' – '}
+                    {order.plannedEndDate ? shortDate(order.plannedEndDate) : '?'}
+                  </Badge>
+                )}
+                {hasDeviation && (
+                  <Badge
+                    variant="destructive"
+                    className="gap-1 text-xs font-normal"
+                    title={`Soll: ${order.estimatedHours}h / Ist: ${order.actualHours}h`}
+                  >
+                    <AlertTriangle className="size-3" />
+                    Abweichung
+                  </Badge>
+                )}
+              </div>
             )}
             {order.assignees.length > 0 && (
               <div className="flex items-center gap-1 flex-wrap">
@@ -329,7 +494,12 @@ export function KanbanBoard() {
     updateStatus.mutate({ id: order.id, status })
   }
 
-  const handleSaveDetail = (updated: { title: string; customer?: string; description?: string; assigneeIds: string[] }) => {
+  const handleSaveDetail = (updated: {
+    title: string; customer?: string; description?: string; assigneeIds: string[]
+    revenue?: number; invoiceDate?: string; estimatedHours?: number
+    plannedStartDate?: string; plannedEndDate?: string; actualHours?: number
+    deviationReason?: string
+  }) => {
     if (!detailOrder) return
     updateOrder.mutate({ id: detailOrder.id, ...updated })
   }

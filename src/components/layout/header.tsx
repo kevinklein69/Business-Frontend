@@ -22,6 +22,7 @@ const pageTitles: Record<string, string> = {
   '/vacation':     'Urlaub',
   '/absences':     'Fehlzeiten',
   '/employees':    'Mitarbeiter',
+  '/statistics':   'Statistik',
   '/settings':     'Einstellungen',
 }
 

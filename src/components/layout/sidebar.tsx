@@ -10,6 +10,7 @@ import {
   Stethoscope,
   Users,
   Settings,
+  BarChart3,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useIsManager } from '@/lib/auth'
@@ -24,6 +25,7 @@ const navItems = [
 
 const absencesItem = { href: '/absences',  label: 'Fehlzeiten',  icon: Stethoscope }
 const employeesItem = { href: '/employees', label: 'Mitarbeiter', icon: Users }
+const statisticsItem = { href: '/statistics', label: 'Statistik', icon: BarChart3 }
 
 const settingsItem = { href: '/settings', label: 'Einstellungen', icon: Settings }
 
@@ -32,7 +34,7 @@ export function Sidebar() {
   const showManagerNav = useIsManager()
 
   const items = showManagerNav
-    ? [...navItems, absencesItem, employeesItem]
+    ? [...navItems, absencesItem, employeesItem, statisticsItem]
     : [...navItems, employeesItem]
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')

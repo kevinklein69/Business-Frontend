@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { isAxiosError } from 'axios'
+import { addMonths, format, parseISO } from 'date-fns'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
@@ -22,6 +23,13 @@ const roleLabel: Record<Role, string> = {
 
 const roles: Role[] = ['Employee', 'Manager', 'Admin']
 
+const computeProbationEnd = (entryDate: string, months: string) => {
+  if (!entryDate || !months.trim()) return ''
+  const monthsNum = Number(months)
+  if (Number.isNaN(monthsNum)) return ''
+  return format(addMonths(parseISO(entryDate), monthsNum), 'yyyy-MM-dd')
+}
+
 export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; onClose: () => void }) {
   const [form, setForm] = useState({
     firstName: employee.firstName,
@@ -29,11 +37,32 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
     email: employee.email,
     department: employee.department ?? '',
     password: '',
+    phone: employee.phone ?? '',
+    street: employee.street ?? '',
+    houseNumber: employee.houseNumber ?? '',
+    zip: employee.zip ?? '',
+    city: employee.city ?? '',
+    entryDate: employee.entryDate ?? '',
+    probationMonths: employee.probationMonths != null ? String(employee.probationMonths) : '',
+    probationEndDate: employee.probationEndDate ?? '',
+    vacationDaysEntitlement: employee.vacationDaysEntitlement != null ? String(employee.vacationDaysEntitlement) : '30',
   })
   const [role, setRole] = useState<Role>(employee.role)
+  const [probationEndTouched, setProbationEndTouched] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const updateEmployee = useUpdateEmployee()
+
+  const updateField = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setForm((f) => {
+      const next = { ...f, [field]: value }
+      if ((field === 'entryDate' || field === 'probationMonths') && !probationEndTouched) {
+        next.probationEndDate = computeProbationEnd(next.entryDate, next.probationMonths)
+      }
+      return next
+    })
+  }
 
   const handleSave = () => {
     setError(null)
@@ -46,6 +75,15 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
         role,
         department: form.department.trim() || undefined,
         password: form.password ? form.password : undefined,
+        phone: form.phone.trim() || undefined,
+        street: form.street.trim(),
+        houseNumber: form.houseNumber.trim(),
+        zip: form.zip.trim(),
+        city: form.city.trim(),
+        entryDate: form.entryDate,
+        probationMonths: form.probationMonths.trim() ? Number(form.probationMonths) : undefined,
+        probationEndDate: form.probationEndDate || undefined,
+        vacationDaysEntitlement: Number(form.vacationDaysEntitlement),
       },
       {
         onSuccess: () => onClose(),
@@ -61,16 +99,18 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
 
   const canSubmit =
     form.firstName.trim() && form.lastName.trim() && form.email.trim() &&
-    (form.password.length === 0 || form.password.length >= 8)
+    (form.password.length === 0 || form.password.length >= 8) &&
+    form.street.trim() && form.houseNumber.trim() && /^\d{5}$/.test(form.zip.trim()) && form.city.trim() &&
+    form.entryDate && form.vacationDaysEntitlement.trim() && Number(form.vacationDaysEntitlement) >= 0
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Mitarbeiter bearbeiten</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4 py-1">
+        <div className="flex flex-col gap-4 py-1 max-h-[70vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="ee-firstName">Vorname</Label>
@@ -112,6 +152,75 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
               onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
               placeholder="Leer lassen, um Passwort beizubehalten"
             />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="ee-phone">Telefonnummer (optional)</Label>
+            <Input
+              id="ee-phone"
+              type="tel"
+              value={form.phone}
+              onChange={updateField('phone')}
+              placeholder="+49 …"
+            />
+          </div>
+
+          {/* Adresse */}
+          <div className="flex flex-col gap-3 border-t pt-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Adresse</p>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="flex flex-col gap-1.5 col-span-2">
+                <Label htmlFor="ee-street">Straße *</Label>
+                <Input id="ee-street" value={form.street} onChange={updateField('street')} placeholder="Musterstraße" />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="ee-houseNumber">Hausnr. *</Label>
+                <Input id="ee-houseNumber" value={form.houseNumber} onChange={updateField('houseNumber')} placeholder="12a" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="ee-zip">PLZ *</Label>
+                <Input id="ee-zip" value={form.zip} onChange={updateField('zip')} placeholder="12345" maxLength={5} />
+              </div>
+              <div className="flex flex-col gap-1.5 col-span-2">
+                <Label htmlFor="ee-city">Ort *</Label>
+                <Input id="ee-city" value={form.city} onChange={updateField('city')} placeholder="Musterstadt" />
+              </div>
+            </div>
+          </div>
+
+          {/* Vertragsdaten */}
+          <div className="flex flex-col gap-3 border-t pt-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Vertragsdaten</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="ee-entryDate">Eintrittsdatum *</Label>
+                <Input id="ee-entryDate" type="date" value={form.entryDate} onChange={updateField('entryDate')} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="ee-probationMonths">Probezeit (Monate)</Label>
+                <Input id="ee-probationMonths" type="number" min={0} value={form.probationMonths} onChange={updateField('probationMonths')} placeholder="z.B. 6" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="ee-probationEndDate">Probezeitende</Label>
+                <Input
+                  id="ee-probationEndDate"
+                  type="date"
+                  value={form.probationEndDate}
+                  onChange={(e) => {
+                    setProbationEndTouched(true)
+                    setForm((f) => ({ ...f, probationEndDate: e.target.value }))
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="ee-vacationDays">Urlaubsanspruch (Tage) *</Label>
+                <Input id="ee-vacationDays" type="number" min={0} value={form.vacationDaysEntitlement} onChange={updateField('vacationDaysEntitlement')} />
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

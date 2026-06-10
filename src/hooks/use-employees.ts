@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import type { Employee, Role } from '@/types'
+import type { Employee, EmployeeDetail, Role } from '@/types'
 
 export function useEmployees() {
   return useQuery({
@@ -12,6 +12,17 @@ export function useEmployees() {
   })
 }
 
+export function useEmployee(id: string | undefined) {
+  return useQuery({
+    queryKey: ['employees', id],
+    queryFn: async () => {
+      const res = await apiClient.get<EmployeeDetail>(`/api/employees/${id}`)
+      return res.data
+    },
+    enabled: !!id,
+  })
+}
+
 export interface CreateEmployeeInput {
   firstName: string
   lastName: string
@@ -19,6 +30,15 @@ export interface CreateEmployeeInput {
   password: string
   role: Role
   department?: string
+  street: string
+  houseNumber: string
+  zip: string
+  city: string
+  phone?: string
+  entryDate: string
+  probationMonths?: number
+  probationEndDate?: string
+  vacationDaysEntitlement: number
 }
 
 export function useCreateEmployee() {
@@ -40,6 +60,15 @@ export interface UpdateEmployeeInput {
   role: Role
   department?: string
   password?: string
+  street: string
+  houseNumber: string
+  zip: string
+  city: string
+  phone?: string
+  entryDate: string
+  probationMonths?: number
+  probationEndDate?: string
+  vacationDaysEntitlement: number
 }
 
 export function useUpdateEmployee() {

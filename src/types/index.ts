@@ -11,6 +11,20 @@ export interface User {
 
 export interface Employee extends User {
   hasActiveOrder: boolean
+  street?: string
+  houseNumber?: string
+  zip?: string
+  city?: string
+  phone?: string
+  entryDate?: string
+  probationMonths?: number
+  probationEndDate?: string
+  vacationDaysEntitlement?: number
+}
+
+export interface EmployeeDetail extends Employee {
+  remainingVacationDays: number
+  sickDaysThisYear: number
 }
 
 export interface TimeEntry {

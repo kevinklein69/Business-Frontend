@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Users, ClipboardList, CheckCircle2, Pencil, Trash2 } from 'lucide-react'
+import { Search, Users, ClipboardList, CheckCircle2, Pencil, Trash2, Eye } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,7 @@ import { AssignOrdersDialog } from '@/components/employees/assign-orders-dialog'
 import { CreateEmployeeDialog } from '@/components/employees/create-employee-dialog'
 import { EditEmployeeDialog } from '@/components/employees/edit-employee-dialog'
 import { DeleteEmployeeDialog } from '@/components/employees/delete-employee-dialog'
+import { EmployeeDetailDialog } from '@/components/employees/employee-detail-dialog'
 import type { Employee, Role } from '@/types'
 
 type FilterKey = 'Alle' | 'HatAuftrag' | 'KeinAuftrag' | string
@@ -44,6 +45,7 @@ export default function EmployeesPage() {
   const [assigningEmployee, setAssigningEmployee] = useState<Employee | null>(null)
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null)
+  const [viewingEmployeeId, setViewingEmployeeId] = useState<string | null>(null)
 
   const isManager = useIsManager()
   const isAdmin = useIsAdmin()
@@ -170,6 +172,16 @@ export default function EmployeesPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="mt-7 flex items-center gap-2">
+                      {isManager && (
+                        <button
+                          type="button"
+                          onClick={() => setViewingEmployeeId(m.id)}
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label="Mitarbeiter Details anzeigen"
+                        >
+                          <Eye className="size-3.5" />
+                        </button>
+                      )}
                       {isAdmin && (
                         <>
                           <button
@@ -237,6 +249,10 @@ export default function EmployeesPage() {
 
       {deletingEmployee && (
         <DeleteEmployeeDialog employee={deletingEmployee} onClose={() => setDeletingEmployee(null)} />
+      )}
+
+      {viewingEmployeeId && (
+        <EmployeeDetailDialog employeeId={viewingEmployeeId} onClose={() => setViewingEmployeeId(null)} />
       )}
     </div>
   )

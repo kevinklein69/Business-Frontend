@@ -348,7 +348,7 @@ function OrderDetailDialog({
               <Button
                 variant="outline"
                 size="sm"
-                className="self-start"
+                className="self-end"
                 onClick={handleUpload}
                 disabled={uploadAttachments.isPending}
               >

@@ -12,6 +12,10 @@ apiClient.interceptors.request.use((config) => {
     const token = localStorage.getItem('token')
     if (token) config.headers.Authorization = `Bearer ${token}`
   }
+  // Bei FormData muss der Browser den multipart-Content-Type samt Boundary setzen.
+  if (config.data instanceof FormData) {
+    config.headers.delete('Content-Type')
+  }
   return config
 })
 

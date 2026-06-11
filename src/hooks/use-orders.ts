@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import type { Order, OrderStatus } from '@/types'
+import type { Order, OrderAttachment, OrderPositionInput, OrderStatus } from '@/types'
 
 export interface UpsertOrderInput {
   title: string
@@ -14,6 +14,7 @@ export interface UpsertOrderInput {
   plannedEndDate?: string | null
   actualHours?: number | null
   deviationReason?: string | null
+  positions: OrderPositionInput[]
 }
 
 export function useOrders() {
@@ -46,6 +47,43 @@ export function useUpdateOrder() {
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orders'] }),
   })
+}
+
+export function useUploadOrderAttachments() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ orderId, files }: { orderId: string; files: File[] }) => {
+      const formData = new FormData()
+      files.forEach((file) => formData.append('files', file, file.name))
+      const res = await apiClient.post<OrderAttachment[]>(`/api/orders/${orderId}/attachments`, formData)
+      return res.data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orders'] }),
+  })
+}
+
+export function useDeleteOrderAttachment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ orderId, attachmentId }: { orderId: string; attachmentId: string }) => {
+      await apiClient.delete(`/api/orders/${orderId}/attachments/${attachmentId}`)
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orders'] }),
+  })
+}
+
+export async function downloadOrderAttachment(orderId: string, attachmentId: string, fileName: string) {
+  const res = await apiClient.get<Blob>(`/api/orders/${orderId}/attachments/${attachmentId}`, {
+    responseType: 'blob',
+  })
+  const url = URL.createObjectURL(res.data)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
 }
 
 export function useUpdateOrderStatus() {

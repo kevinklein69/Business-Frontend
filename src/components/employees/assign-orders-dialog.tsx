@@ -31,12 +31,25 @@ export function AssignOrdersDialog({ employee, onClose }: { employee: Employee; 
       ? order.assignees.filter((a) => a.id !== employee.id).map((a) => a.id)
       : [...order.assignees.map((a) => a.id), employee.id]
 
+    // Alle Felder mitsenden — der PUT-Endpunkt überschreibt den kompletten Auftrag.
     updateOrder.mutate({
       id: order.id,
       title: order.title,
       customer: order.customer,
       description: order.description,
       assigneeIds,
+      revenue: order.revenue,
+      invoiceDate: order.invoiceDate,
+      estimatedHours: order.estimatedHours,
+      plannedStartDate: order.plannedStartDate,
+      plannedEndDate: order.plannedEndDate,
+      actualHours: order.actualHours,
+      deviationReason: order.deviationReason,
+      positions: order.positions.map((p) => ({
+        description: p.description,
+        quantity: p.quantity,
+        unitPrice: p.unitPrice,
+      })),
     })
   }
 

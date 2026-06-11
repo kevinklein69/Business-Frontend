@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, User, Building2, Search, Check, CalendarRange, Euro, AlertTriangle } from 'lucide-react'
+import { Building2, CalendarRange, Download, Euro, AlertTriangle, Paperclip, Trash2, Upload } from 'lucide-react'
 import { format } from 'date-fns'
 import {
   DndContext, DragOverlay, PointerSensor,
@@ -14,14 +14,24 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog, DialogContent, DialogHeader,
-  DialogTitle, DialogTrigger, DialogFooter,
+  DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { useEmployees } from '@/hooks/use-employees'
-import { useCreateOrder, useOrders, useUpdateOrder, useUpdateOrderStatus } from '@/hooks/use-orders'
-import type { Assignee, Employee, Order, OrderStatus } from '@/types'
+import {
+  downloadOrderAttachment, useDeleteOrderAttachment, useOrders,
+  useUpdateOrder, useUpdateOrderStatus, useUploadOrderAttachments,
+} from '@/hooks/use-orders'
+import { AssigneePicker } from './assignee-picker'
+import { CreateOrderDialog } from './create-order-dialog'
+import { FileUploadZone, fileIcon, formatFileSize } from './file-upload-zone'
+import {
+  OrderPositionsEditor, isPositionRowEmpty, isPositionRowValid, toPositionInputs,
+  type PositionRow,
+} from './order-positions-editor'
+import type { Assignee, Employee, Order, OrderPositionInput, OrderStatus } from '@/types'
 
 const COLUMNS: { key: OrderStatus; label: string; badgeVariant: 'default' | 'secondary' | 'outline' }[] = [
   { key: 'Backlog',            label: 'Backlog',             badgeVariant: 'secondary' },
@@ -62,14 +72,13 @@ function OrderDetailDialog({
     title: string; customer?: string; description?: string; assigneeIds: string[]
     revenue?: number; invoiceDate?: string; estimatedHours?: number
     plannedStartDate?: string; plannedEndDate?: string; actualHours?: number
-    deviationReason?: string
+    deviationReason?: string; positions: OrderPositionInput[]
   }) => void
 }) {
   const [title,            setTitle]            = useState(order.title)
   const [customer,         setCustomer]         = useState(order.customer ?? '')
   const [description,      setDescription]      = useState(order.description ?? '')
   const [assignees,        setAssignees]        = useState<Assignee[]>(order.assignees)
-  const [assigneeSearch,   setAssigneeSearch]   = useState('')
   const [revenue,          setRevenue]          = useState(order.revenue?.toString() ?? '')
   const [invoiceDate,      setInvoiceDate]      = useState(order.invoiceDate ?? '')
   const [estimatedHours,   setEstimatedHours]   = useState(order.estimatedHours?.toString() ?? '')
@@ -77,22 +86,27 @@ function OrderDetailDialog({
   const [plannedEndDate,   setPlannedEndDate]   = useState(order.plannedEndDate ?? '')
   const [actualHours,      setActualHours]      = useState(order.actualHours?.toString() ?? '')
   const [deviationReason,  setDeviationReason]  = useState(order.deviationReason ?? '')
-
-  const filteredEmployees = employees.filter((m) =>
-    `${m.firstName} ${m.lastName}`.toLowerCase().includes(assigneeSearch.toLowerCase())
+  const [positions,        setPositions]        = useState<PositionRow[]>(
+    order.positions.map((p) => ({
+      description: p.description,
+      quantity: p.quantity.toString(),
+      unitPrice: p.unitPrice.toString(),
+    }))
   )
+  const [saveAttempted, setSaveAttempted] = useState(false)
+  const [newFiles,      setNewFiles]      = useState<File[]>([])
 
-  const toggleAssignee = (employee: Employee) =>
-    setAssignees((prev) =>
-      prev.some((a) => a.id === employee.id)
-        ? prev.filter((a) => a.id !== employee.id)
-        : [...prev, { id: employee.id, name: `${employee.firstName} ${employee.lastName}` }]
-    )
+  const uploadAttachments = useUploadOrderAttachments()
+  const deleteAttachment  = useDeleteOrderAttachment()
 
   const num = (s: string) => (s.trim() === '' ? undefined : parseFloat(s))
   const str = (s: string) => (s.trim() === '' ? undefined : s)
 
+  const positionsValid = positions.every((row) => isPositionRowEmpty(row) || isPositionRowValid(row))
+
   const handleSave = () => {
+    setSaveAttempted(true)
+    if (!positionsValid) return
     onSave({
       title:       title.trim() || order.title,
       customer:    customer.trim() || undefined,
@@ -105,8 +119,17 @@ function OrderDetailDialog({
       plannedEndDate:   str(plannedEndDate),
       actualHours:      num(actualHours),
       deviationReason:  str(deviationReason),
+      positions: toPositionInputs(positions),
     })
     onClose()
+  }
+
+  const handleUpload = () => {
+    if (newFiles.length === 0) return
+    uploadAttachments.mutate(
+      { orderId: order.id, files: newFiles },
+      { onSuccess: () => setNewFiles([]) }
+    )
   }
 
   const statusLabel: Record<OrderStatus, string> = {
@@ -119,7 +142,7 @@ function OrderDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl sm:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Auftrag bearbeiten</DialogTitle>
         </DialogHeader>
@@ -229,6 +252,15 @@ function OrderDetailDialog({
             )}
           </div>
 
+          {/* Mitarbeiter */}
+          <div className="border-t pt-3">
+            <AssigneePicker
+              employees={employees}
+              assignees={assignees}
+              onChange={setAssignees}
+            />
+          </div>
+
           {/* Abrechnung */}
           <div className="flex flex-col gap-3 border-t pt-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
@@ -259,56 +291,70 @@ function OrderDetailDialog({
             </div>
           </div>
 
-          {/* Mitarbeiter */}
-          <div className="flex flex-col gap-2">
+          {/* Positionen */}
+          <div className="border-t pt-3">
+            <OrderPositionsEditor
+              positions={positions}
+              onChange={setPositions}
+              showErrors={saveAttempted}
+            />
+          </div>
+
+          {/* Anhänge */}
+          <div className="flex flex-col gap-2 border-t pt-3">
             <Label className="flex items-center gap-1.5">
-              <User className="size-3.5" /> Mitarbeiter
-              {assignees.length > 0 && (
-                <span className="ml-auto text-xs font-normal text-muted-foreground">
-                  {assignees.length} ausgewählt
-                </span>
-              )}
+              <Paperclip className="size-3.5" /> Anhänge
             </Label>
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
-              <Input
-                placeholder="Mitarbeiter suchen…"
-                value={assigneeSearch}
-                onChange={(e) => setAssigneeSearch(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-0.5">
-              {filteredEmployees.length === 0 ? (
-                <p className="col-span-2 text-center text-sm text-muted-foreground py-4">
-                  Kein Mitarbeiter gefunden
-                </p>
-              ) : filteredEmployees.map((employee) => {
-                const name = `${employee.firstName} ${employee.lastName}`
-                const selected = assignees.some((a) => a.id === employee.id)
-                return (
-                  <button
-                    key={employee.id}
-                    type="button"
-                    onClick={() => toggleAssignee(employee)}
-                    className={cn(
-                      'flex items-center gap-2 rounded-lg border px-2.5 py-2 text-sm transition-colors text-left',
-                      selected
-                        ? 'border-primary bg-primary/10 text-primary font-medium'
-                        : 'border-border text-foreground hover:bg-muted'
-                    )}
-                  >
-                    <div className={cn(
-                      'flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-                      selected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                    )}>
-                      {selected ? <Check className="size-3" /> : initials(name).slice(0,2)}
-                    </div>
-                    <span className="truncate">{name}</span>
-                  </button>
-                )
-              })}
-            </div>
+            {order.attachments.length > 0 && (
+              <ul className="flex flex-col gap-1">
+                {order.attachments.map((attachment) => {
+                  const Icon = fileIcon(attachment.fileName)
+                  return (
+                    <li
+                      key={attachment.id}
+                      className="flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm"
+                    >
+                      <Icon className="size-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{attachment.fileName}</span>
+                      <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                        {formatFileSize(attachment.sizeBytes)}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-6 shrink-0"
+                        aria-label={`${attachment.fileName} herunterladen`}
+                        onClick={() => downloadOrderAttachment(order.id, attachment.id, attachment.fileName)}
+                      >
+                        <Download className="size-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-6 shrink-0 text-destructive hover:text-destructive"
+                        aria-label={`${attachment.fileName} löschen`}
+                        disabled={deleteAttachment.isPending}
+                        onClick={() => deleteAttachment.mutate({ orderId: order.id, attachmentId: attachment.id })}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+            <FileUploadZone files={newFiles} onChange={setNewFiles} label="Neue Anhänge" />
+            {newFiles.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="self-start"
+                onClick={handleUpload}
+                disabled={uploadAttachments.isPending}
+              >
+                <Upload className="size-3.5" /> Hochladen
+              </Button>
+            )}
           </div>
         </div>
 
@@ -472,16 +518,14 @@ export function KanbanBoard() {
 
   const updateStatus = useUpdateOrderStatus()
   const updateOrder  = useUpdateOrder()
-  const createOrder  = useCreateOrder()
 
-  const [activeId,       setActiveId]       = useState<string | null>(null)
-  const [detailOrder,    setDetailOrder]    = useState<Order | null>(null)
-  const [newDialogOpen,  setNewDialogOpen]  = useState(false)
-  const [newTitle,       setNewTitle]       = useState('')
-  const [newDescription, setNewDescription] = useState('')
+  const [activeId,      setActiveId]      = useState<string | null>(null)
+  const [detailOrderId, setDetailOrderId] = useState<string | null>(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   const activeOrder = orders.find((a) => a.id === activeId) ?? null
+  // Aus der Liste auflösen, damit der Dialog nach Refetch (z.B. Anhang-Upload) frische Daten sieht.
+  const detailOrder = orders.find((a) => a.id === detailOrderId) ?? null
 
   const handleDragStart = (e: DragStartEvent) => setActiveId(e.active.id as string)
 
@@ -498,24 +542,10 @@ export function KanbanBoard() {
     title: string; customer?: string; description?: string; assigneeIds: string[]
     revenue?: number; invoiceDate?: string; estimatedHours?: number
     plannedStartDate?: string; plannedEndDate?: string; actualHours?: number
-    deviationReason?: string
+    deviationReason?: string; positions: OrderPositionInput[]
   }) => {
     if (!detailOrder) return
     updateOrder.mutate({ id: detailOrder.id, ...updated })
-  }
-
-  const handleCreate = () => {
-    if (!newTitle.trim()) return
-    createOrder.mutate(
-      {
-        title: newTitle.trim(),
-        description: newDescription.trim() || undefined,
-        assigneeIds: [],
-      },
-      { onSuccess: () => setNewDialogOpen(false) }
-    )
-    setNewTitle('')
-    setNewDescription('')
   }
 
   return (
@@ -524,27 +554,7 @@ export function KanbanBoard() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-semibold">Aufträge</h1>
-            <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
-              <DialogTrigger render={<Button />}>
-                <Plus className="size-4" /> Neuer Auftrag
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Neuen Auftrag erstellen</DialogTitle></DialogHeader>
-                <div className="flex flex-col gap-4 py-2">
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="n-title">Titel</Label>
-                    <Input id="n-title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Auftragstitel" />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="n-description">Beschreibung (optional)</Label>
-                    <Input id="n-description" value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Kurze Beschreibung" />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button onClick={handleCreate} disabled={!newTitle.trim()}>Erstellen</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <CreateOrderDialog employees={employees} />
           </div>
 
           <div className="flex gap-4 overflow-x-auto pb-2 w-full min-w-0">
@@ -554,7 +564,7 @@ export function KanbanBoard() {
                 col={col}
                 items={orders.filter((a) => a.status === col.key)}
                 activeId={activeId}
-                onOpenCard={setDetailOrder}
+                onOpenCard={(order) => setDetailOrderId(order.id)}
               />
             ))}
           </div>
@@ -570,7 +580,7 @@ export function KanbanBoard() {
           order={detailOrder}
           employees={employees}
           open={!!detailOrder}
-          onClose={() => setDetailOrder(null)}
+          onClose={() => setDetailOrderId(null)}
           onSave={handleSaveDetail}
         />
       )}

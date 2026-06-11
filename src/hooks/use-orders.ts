@@ -96,3 +96,17 @@ export function useUpdateOrderStatus() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orders'] }),
   })
 }
+
+export function useUpdateOrderPlanningPeriod() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, planningPeriodId }: { id: string; planningPeriodId: string | null }) => {
+      const res = await apiClient.patch<Order>(`/api/orders/${id}/planning-period`, { planningPeriodId })
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['planning-periods'] })
+    },
+  })
+}

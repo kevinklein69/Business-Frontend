@@ -18,7 +18,7 @@ import type { OrderStatus } from '@/types'
 const currencyFormatter = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
 const STATUS_CONFIG: { key: OrderStatus; label: string; color: string }[] = [
-  { key: 'Backlog',            label: 'Backlog',             color: 'var(--chart-1)' },
+  { key: 'ToDo',               label: 'Zu Erledigen',        color: 'var(--chart-1)' },
   { key: 'InProgress',         label: 'In Bearbeitung',      color: 'var(--chart-2)' },
   { key: 'ReadyForAcceptance', label: 'Bereit für Abnahme',  color: 'var(--chart-3)' },
   { key: 'Invoicing',          label: 'Rechnungserstellung', color: 'var(--chart-4)' },

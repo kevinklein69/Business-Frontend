@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import type { Order, OrderStatus } from '@/types'
 
 const statusLabel: Record<OrderStatus, string> = {
-  Backlog:            'Backlog',
+  ToDo:               'Zu Erledigen',
   InProgress:         'In Bearbeitung',
   ReadyForAcceptance: 'Bereit für Abnahme',
   Invoicing:          'Rechnungserstellung',

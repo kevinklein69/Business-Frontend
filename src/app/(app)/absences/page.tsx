@@ -247,6 +247,7 @@ export default function AbsencesPage() {
   const [type,       setType]       = useState<AbsenceType>('Sick')
   const [range,      setRange]      = useState<DateRange | undefined>(undefined)
   const [comment,    setComment]    = useState('')
+  const [employeeTouched, setEmployeeTouched] = useState(false)
 
   const selectedDays =
     range?.from && range?.to && companySettings
@@ -336,14 +337,21 @@ export default function AbsencesPage() {
           <CardContent className="flex flex-col gap-6 lg:flex-row">
             <div className="flex w-full flex-col gap-4 lg:w-80 lg:shrink-0">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="employee">Mitarbeiter</Label>
+                <Label htmlFor="employee">Mitarbeiter *</Label>
                 <Combobox
                   items={employees.map((e) => e.id)}
                   itemToStringLabel={employeeLabel}
                   value={employeeId || null}
                   onValueChange={(v) => setEmployeeId((v as string | null) ?? '')}
                 >
-                  <ComboboxInput id="employee" placeholder="Mitarbeiter suchen…" className="w-full" />
+                  <ComboboxInput
+                    id="employee"
+                    placeholder="Mitarbeiter suchen…"
+                    className="w-full"
+                    required
+                    aria-invalid={employeeTouched && !employeeId}
+                    onBlur={() => setEmployeeTouched(true)}
+                  />
                   <ComboboxContent>
                     <ComboboxEmpty>Keine Mitarbeiter gefunden</ComboboxEmpty>
                     <ComboboxList>
@@ -355,6 +363,9 @@ export default function AbsencesPage() {
                     </ComboboxList>
                   </ComboboxContent>
                 </Combobox>
+                {employeeTouched && !employeeId && (
+                  <p className="text-sm text-destructive">Bitte einen Mitarbeiter auswählen.</p>
+                )}
               </div>
 
               <div className="flex flex-col gap-1.5">

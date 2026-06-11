@@ -49,7 +49,18 @@ export interface ToggleClockResult {
   clockIn?: string
 }
 
-export type OrderStatus = 'Backlog' | 'InProgress' | 'ReadyForAcceptance' | 'Invoicing' | 'Done'
+export type OrderStatus = 'ToDo' | 'InProgress' | 'ReadyForAcceptance' | 'Invoicing' | 'Done'
+
+export type PlanningPeriodStatus = 'Planned' | 'Active' | 'Closed'
+
+export interface PlanningPeriod {
+  id: string
+  name: string
+  startDate?: string | null
+  endDate?: string | null
+  status: PlanningPeriodStatus
+  orderCount: number
+}
 
 export interface Assignee {
   id: string
@@ -84,6 +95,7 @@ export interface Order {
   description?: string
   customer?: string
   status: OrderStatus
+  planningPeriodId?: string | null
   assignees: Assignee[]
   createdAt: string
   revenue?: number | null

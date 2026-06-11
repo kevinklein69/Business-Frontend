@@ -182,7 +182,8 @@ export default function VacationPage() {
               >
                 <SelectTrigger
                   id="absence-type"
-                  className={`w-full${typeError ? ' border-destructive ring-3 ring-destructive/20' : ''}`}
+                  className="w-full"
+                  aria-invalid={typeError}
                 >
                   <SelectValue placeholder="Bitte wählen…">
                     {(value: AbsenceType | null) =>

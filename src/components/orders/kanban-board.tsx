@@ -25,7 +25,6 @@ import {
   useUpdateOrder, useUpdateOrderStatus, useUploadOrderAttachments,
 } from '@/hooks/use-orders'
 import { AssigneePicker } from './assignee-picker'
-import { CreateOrderDialog } from './create-order-dialog'
 import { FileUploadZone, fileIcon, formatFileSize } from './file-upload-zone'
 import {
   OrderPositionsEditor, isPositionRowEmpty, isPositionRowValid, toPositionInputs,
@@ -34,7 +33,7 @@ import {
 import type { Assignee, Employee, Order, OrderPositionInput, OrderStatus } from '@/types'
 
 const COLUMNS: { key: OrderStatus; label: string; badgeVariant: 'default' | 'secondary' | 'outline' }[] = [
-  { key: 'Backlog',            label: 'Backlog',             badgeVariant: 'secondary' },
+  { key: 'ToDo',               label: 'Zu Erledigen',        badgeVariant: 'secondary' },
   { key: 'InProgress',         label: 'In Bearbeitung',      badgeVariant: 'default'   },
   { key: 'ReadyForAcceptance', label: 'Bereit für Abnahme',  badgeVariant: 'default'   },
   { key: 'Invoicing',          label: 'Rechnungserstellung', badgeVariant: 'default'   },
@@ -57,7 +56,7 @@ function shortDate(date: string) {
 
 // ── Detail Dialog ─────────────────────────────────────────────────────────────
 
-function OrderDetailDialog({
+export function OrderDetailDialog({
   order,
   employees,
   open,
@@ -133,7 +132,7 @@ function OrderDetailDialog({
   }
 
   const statusLabel: Record<OrderStatus, string> = {
-    Backlog:            'Backlog',
+    ToDo:               'Zu Erledigen',
     InProgress:         'In Bearbeitung',
     ReadyForAcceptance: 'Bereit für Abnahme',
     Invoicing:          'Rechnungserstellung',
@@ -395,7 +394,7 @@ function KanbanCard({
       style={{ transform: CSS.Translate.toString(transform) }}
       {...listeners}
       {...attributes}
-      className={cn('touch-none', isDragging && !overlay && 'opacity-40', overlay && 'rotate-2 shadow-xl cursor-grabbing')}
+      className={cn('touch-none', isDragging && !overlay && 'opacity-0', overlay && 'shadow-xl cursor-grabbing')}
     >
       <Card
         size="sm"
@@ -512,9 +511,12 @@ function KanbanColumn({
 
 // ── Board ─────────────────────────────────────────────────────────────────────
 
-export function KanbanBoard() {
+export function KanbanBoard({ periodId }: { periodId: string | null }) {
   const { data: orders = [] }    = useOrders()
   const { data: employees = [] } = useEmployees()
+
+  // Only orders assigned to the active planning period appear on the working board.
+  const boardOrders = orders.filter((o) => (o.planningPeriodId ?? null) === periodId)
 
   const updateStatus = useUpdateOrderStatus()
   const updateOrder  = useUpdateOrder()
@@ -551,23 +553,16 @@ export function KanbanBoard() {
   return (
     <>
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">Aufträge</h1>
-            <CreateOrderDialog employees={employees} />
-          </div>
-
-          <div className="flex gap-4 overflow-x-auto pb-2 w-full min-w-0">
-            {COLUMNS.map((col) => (
-              <KanbanColumn
-                key={col.key}
-                col={col}
-                items={orders.filter((a) => a.status === col.key)}
-                activeId={activeId}
-                onOpenCard={(order) => setDetailOrderId(order.id)}
-              />
-            ))}
-          </div>
+        <div className="flex gap-4 overflow-x-auto pb-2 w-full min-w-0">
+          {COLUMNS.map((col) => (
+            <KanbanColumn
+              key={col.key}
+              col={col}
+              items={boardOrders.filter((a) => a.status === col.key)}
+              activeId={activeId}
+              onOpenCard={(order) => setDetailOrderId(order.id)}
+            />
+          ))}
         </div>
 
         <DragOverlay dropAnimation={null}>

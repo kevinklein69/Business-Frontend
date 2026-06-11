@@ -1,5 +1,5 @@
-import { KanbanBoard } from '@/components/orders/kanban-board'
+import { OrdersView } from '@/components/orders/orders-view'
 
 export default function OrdersPage() {
-  return <KanbanBoard />
+  return <OrdersView />
 }

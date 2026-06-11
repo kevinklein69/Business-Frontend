@@ -144,6 +144,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
               onBlur={markTouched('title')}
               placeholder="Auftragstitel"
               disabled={attachmentFailureMode}
+              required
               aria-invalid={showError('title') && !!fieldErrors.title}
             />
             {showError('title') && fieldErrors.title && (
@@ -163,6 +164,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
               onBlur={markTouched('customer')}
               placeholder="Kundenname"
               disabled={attachmentFailureMode}
+              required
               aria-invalid={showError('customer') && !!fieldErrors.customer}
             />
             {showError('customer') && fieldErrors.customer && (
@@ -199,6 +201,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
                   onChange={(e) => setPlannedStartDate(e.target.value)}
                   onBlur={markTouched('plannedStartDate')}
                   disabled={attachmentFailureMode}
+                  required
                   aria-invalid={showError('plannedStartDate') && !!fieldErrors.plannedStartDate}
                 />
                 {showError('plannedStartDate') && fieldErrors.plannedStartDate && (
@@ -214,6 +217,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
                   onChange={(e) => setPlannedEndDate(e.target.value)}
                   onBlur={markTouched('plannedEndDate')}
                   disabled={attachmentFailureMode}
+                  required
                   aria-invalid={showError('plannedEndDate') && !!fieldErrors.plannedEndDate}
                 />
                 {showError('plannedEndDate') && fieldErrors.plannedEndDate && (

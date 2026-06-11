@@ -11,7 +11,7 @@ import { useOrders, useUpdateOrder } from '@/hooks/use-orders'
 import type { Employee, Order, OrderStatus } from '@/types'
 
 const statusLabel: Record<OrderStatus, string> = {
-  Backlog:            'Backlog',
+  ToDo:               'Zu Erledigen',
   InProgress:         'In Bearbeitung',
   ReadyForAcceptance: 'Bereit für Abnahme',
   Invoicing:          'Rechnungserstellung',

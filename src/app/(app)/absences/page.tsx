@@ -7,7 +7,7 @@ import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import {
   CalendarDays, CheckCircle2, Clock, XCircle,
-  Stethoscope, PalmtreeIcon, BabyIcon, Users,
+  Stethoscope, PalmtreeIcon, BabyIcon, Users, Timer,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar } from '@/components/ui/calendar'
@@ -35,15 +35,17 @@ import { cn } from '@/lib/utils'
 import type { AbsenceRequest, AbsenceType } from '@/types'
 
 const typeLabel: Record<AbsenceType, string> = {
-  Vacation:  'Urlaub',
-  Sick:      'Krankheit',
-  ChildSick: 'Kind krank',
+  Vacation:             'Urlaub',
+  Sick:                 'Krankheit',
+  ChildSick:            'Kind krank',
+  FlexTimeCompensation: 'Gleitzeitabbau',
 }
 
 const typeIcon: Record<AbsenceType, React.ReactNode> = {
-  Vacation:  <PalmtreeIcon className="size-4" />,
-  Sick:      <Stethoscope className="size-4" />,
-  ChildSick: <BabyIcon className="size-4" />,
+  Vacation:             <PalmtreeIcon className="size-4" />,
+  Sick:                 <Stethoscope className="size-4" />,
+  ChildSick:            <BabyIcon className="size-4" />,
+  FlexTimeCompensation: <Timer className="size-4" />,
 }
 
 const statusLabel: Record<AbsenceRequest['status'], string> = {
@@ -96,7 +98,9 @@ export default function AbsencesPage() {
       ? countWorkingDays(range.from, range.to, companySettings.state)
       : null
 
-  const openVacationRequests = requests.filter((r) => r.type === 'Vacation' && r.status === 'Open')
+  const openVacationRequests = requests.filter(
+    (r) => (r.type === 'Vacation' || r.type === 'FlexTimeCompensation') && r.status === 'Open',
+  )
   const sickThisMonth = requests.filter((r) =>
     (r.type === 'Sick' || r.type === 'ChildSick') &&
     new Date(r.startDate).getMonth() === new Date().getMonth()

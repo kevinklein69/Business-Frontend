@@ -3,6 +3,7 @@ import { apiClient } from '@/lib/api-client'
 import type { AbsenceRequest, AbsenceStatus, AbsenceType } from '@/types'
 
 export interface CreateAbsenceRequestInput {
+  type: AbsenceType
   startDate: string
   endDate: string
   comment?: string

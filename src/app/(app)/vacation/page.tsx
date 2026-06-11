@@ -7,13 +7,16 @@ import { useCreateAbsenceRequest, useAbsenceRequests } from '@/hooks/use-absence
 import { useCompanySettings } from '@/hooks/use-company-settings'
 import { countWorkingDays } from '@/lib/holidays'
 import { de } from 'date-fns/locale'
-import { CalendarDays, CheckCircle2, Clock, XCircle, PalmtreeIcon } from 'lucide-react'
+import { CalendarDays, CheckCircle2, Clock, XCircle, PalmtreeIcon, Timer } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -22,9 +25,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { AbsenceRequest } from '@/types'
+import type { AbsenceRequest, AbsenceType } from '@/types'
 
 const TOTAL_DAYS = 30
+
+const selfServiceTypes: ('Vacation' | 'FlexTimeCompensation')[] = ['Vacation', 'FlexTimeCompensation']
+
+const typeLabel: Record<'Vacation' | 'FlexTimeCompensation', string> = {
+  Vacation:            'Urlaub',
+  FlexTimeCompensation: 'Gleitzeitabbau',
+}
+
+const typeIcon: Record<'Vacation' | 'FlexTimeCompensation', React.ReactNode> = {
+  Vacation:            <PalmtreeIcon className="size-4" />,
+  FlexTimeCompensation: <Timer className="size-4" />,
+}
 
 const statusLabel: Record<AbsenceRequest['status'], string> = {
   Approved: 'Genehmigt',
@@ -46,13 +61,17 @@ export default function VacationPage() {
   const { data: allRequests = [], isLoading } = useAbsenceRequests()
   const { data: companySettings } = useCompanySettings()
   const createRequest = useCreateAbsenceRequest()
-  const [range,    setRange]    = useState<DateRange | undefined>(undefined)
-  const [comment,  setComment]  = useState('')
+  const [range,       setRange]       = useState<DateRange | undefined>(undefined)
+  const [absenceType, setAbsenceType] = useState<AbsenceType | null>(null)
+  const [comment,     setComment]     = useState('')
+  const [typeError,   setTypeError]   = useState(false)
 
-  const requests = allRequests.filter((a) => a.type === 'Vacation')
+  const requests = allRequests.filter(
+    (a) => a.type === 'Vacation' || a.type === 'FlexTimeCompensation',
+  )
 
   const approvedDays = requests
-    .filter((a) => a.status === 'Approved')
+    .filter((a) => a.status === 'Approved' && a.type === 'Vacation')
     .reduce((sum, a) => sum + a.businessDays, 0)
   const openDays = requests
     .filter((a) => a.status === 'Open')
@@ -66,9 +85,14 @@ export default function VacationPage() {
       : null
 
   const handleSubmit = () => {
+    if (!absenceType) {
+      setTypeError(true)
+      return
+    }
     if (!range?.from || !range?.to) return
     createRequest.mutate(
       {
+        type:      absenceType,
         startDate: format(range.from, 'yyyy-MM-dd'),
         endDate:   format(range.to, 'yyyy-MM-dd'),
         comment: comment.trim() || undefined,
@@ -76,7 +100,9 @@ export default function VacationPage() {
       {
         onSuccess: () => {
           setRange(undefined)
+          setAbsenceType(null)
           setComment('')
+          setTypeError(false)
         },
       }
     )
@@ -141,6 +167,48 @@ export default function VacationPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
+
+            {/* Urlaubsart — Pflichtfeld (AC1 + AC2) */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="absence-type">
+                Art der Abwesenheit <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={absenceType}
+                onValueChange={(v) => {
+                  setAbsenceType(v as AbsenceType)
+                  setTypeError(false)
+                }}
+              >
+                <SelectTrigger
+                  id="absence-type"
+                  className={`w-full${typeError ? ' border-destructive ring-3 ring-destructive/20' : ''}`}
+                >
+                  <SelectValue placeholder="Bitte wählen…">
+                    {(value: AbsenceType | null) =>
+                      value && (value === 'Vacation' || value === 'FlexTimeCompensation') ? (
+                        <span className="flex items-center gap-2">
+                          {typeIcon[value]} {typeLabel[value]}
+                        </span>
+                      ) : (
+                        'Bitte wählen…'
+                      )
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {selfServiceTypes.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      <span className="flex items-center gap-2">{typeIcon[t]} {typeLabel[t]}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {typeError && (
+                <p className="text-xs text-destructive">Bitte wählen Sie eine Urlaubsart aus.</p>
+              )}
+            </div>
+
             <Calendar
               mode="range"
               selected={range}
@@ -171,7 +239,7 @@ export default function VacationPage() {
 
             <Button
               onClick={handleSubmit}
-              disabled={!range?.from || !range?.to}
+              disabled={!range?.from || !range?.to || createRequest.isPending}
               className="w-full"
             >
               Antrag einreichen
@@ -191,6 +259,7 @@ export default function VacationPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Art</TableHead>
                   <TableHead>Zeitraum</TableHead>
                   <TableHead>Tage</TableHead>
                   <TableHead>Status</TableHead>
@@ -201,8 +270,16 @@ export default function VacationPage() {
                 {requests.map((a) => {
                   const days = a.businessDays
                   const cfg  = statusConfig[a.status]
+                  const selfServiceType =
+                    a.type === 'Vacation' || a.type === 'FlexTimeCompensation' ? a.type : null
                   return (
                     <TableRow key={a.id} className="hover:bg-muted/50 transition-colors">
+                      <TableCell>
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          {selfServiceType ? typeIcon[selfServiceType] : null}
+                          {selfServiceType ? typeLabel[selfServiceType] : a.type}
+                        </span>
+                      </TableCell>
                       <TableCell className="font-medium">
                         {format(new Date(a.startDate), 'dd.MM.yyyy')}
                         <span className="text-muted-foreground"> – </span>
@@ -226,14 +303,14 @@ export default function VacationPage() {
                 })}
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
                       Lade Anträge…
                     </TableCell>
                   </TableRow>
                 )}
                 {!isLoading && requests.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
                       Noch keine Anträge gestellt
                     </TableCell>
                   </TableRow>

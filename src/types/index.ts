@@ -97,7 +97,7 @@ export interface Order {
 
 export type AbsenceStatus = 'Open' | 'Approved' | 'Rejected'
 
-export type AbsenceType = 'Vacation' | 'Sick' | 'ChildSick'
+export type AbsenceType = 'Vacation' | 'Sick' | 'ChildSick' | 'FlexTimeCompensation'
 
 export interface AbsenceRequest {
   id: string

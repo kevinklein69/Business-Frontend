@@ -6,7 +6,7 @@ import type { DateRange } from 'react-day-picker'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import {
-  CalendarDays, CheckCircle2, Clock, XCircle,
+  CalendarDays, CheckCircle2, ChevronDown, Clock, XCircle,
   Stethoscope, PalmtreeIcon, BabyIcon, Users, Timer,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -66,6 +66,161 @@ const statusConfig: Record<AbsenceRequest['status'], {
 
 const recordableTypes: AbsenceType[] = ['Sick', 'ChildSick', 'Vacation']
 
+// ---------------------------------------------------------------------------
+// Collapsible table card
+// ---------------------------------------------------------------------------
+
+interface CollapsibleRequestsCardProps {
+  title: string
+  count: number
+  defaultOpen: boolean
+  isLoading: boolean
+  emptyMessage: string
+  rows: AbsenceRequest[]
+  showActions: boolean
+  onApprove?: (id: string) => void
+  onReject?: (id: string) => void
+  actionPending?: boolean
+}
+
+function CollapsibleRequestsCard({
+  title, count, defaultOpen, isLoading, emptyMessage,
+  rows, showActions, onApprove, onReject, actionPending,
+}: CollapsibleRequestsCardProps) {
+  const [open, setOpen] = useState(defaultOpen)
+
+  const toggle = () => setOpen((o) => !o)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      toggle()
+    }
+  }
+
+  return (
+    <Card>
+      {/* Clickable header */}
+      <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onClick={toggle}
+        onKeyDown={handleKeyDown}
+        className="flex cursor-pointer items-center justify-between px-6 py-4 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-t-xl"
+      >
+        <div className="flex items-center gap-2">
+          <CalendarDays className="size-4 text-muted-foreground" />
+          <span className="text-sm font-medium text-muted-foreground">{title}</span>
+          <Badge variant="secondary" className="tabular-nums">{count}</Badge>
+        </div>
+        <ChevronDown
+          className={cn(
+            'size-4 text-muted-foreground transition-transform duration-300',
+            open ? 'rotate-180' : 'rotate-0',
+          )}
+        />
+      </div>
+
+      {/* Animated body using grid-template-rows trick */}
+      <div
+        style={{ gridTemplateRows: open ? '1fr' : '0fr' }}
+        className="grid transition-[grid-template-rows] duration-300 ease-in-out"
+      >
+        <div className="overflow-hidden">
+          <div className="border-t">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Mitarbeiter</TableHead>
+                  <TableHead>Art</TableHead>
+                  <TableHead>Zeitraum</TableHead>
+                  <TableHead>Tage</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Kommentar</TableHead>
+                  {showActions && <TableHead className="text-right">Aktion</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((a) => {
+                  const cfg = statusConfig[a.status]
+                  return (
+                    <TableRow key={a.id} className="hover:bg-muted/50 transition-colors">
+                      <TableCell className="font-medium">{a.userName}</TableCell>
+                      <TableCell>
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          {typeIcon[a.type]} {typeLabel[a.type]}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {format(new Date(a.startDate), 'dd.MM.yyyy')}
+                        <span> – </span>
+                        {format(new Date(a.endDate), 'dd.MM.yyyy')}
+                      </TableCell>
+                      <TableCell className="font-medium tabular-nums">{a.businessDays}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={cfg.variant}
+                          className={cn('flex w-fit items-center gap-1', cfg.className ?? '')}
+                        >
+                          {cfg.icon}
+                          {statusLabel[a.status]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{a.comment ?? '—'}</TableCell>
+                      {showActions && (
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1.5">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-success text-success hover:bg-success/10"
+                              disabled={actionPending || a.status === 'Approved'}
+                              onClick={() => onApprove?.(a.id)}
+                            >
+                              Genehmigen
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-destructive text-destructive hover:bg-destructive/10"
+                              disabled={actionPending || a.status === 'Rejected'}
+                              onClick={() => onReject?.(a.id)}
+                            >
+                              Ablehnen
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  )
+                })}
+                {isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={showActions ? 7 : 6} className="text-center text-muted-foreground py-10">
+                      Lade Fehlzeiten…
+                    </TableCell>
+                  </TableRow>
+                )}
+                {!isLoading && rows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={showActions ? 7 : 6} className="text-center text-muted-foreground py-10">
+                      {emptyMessage}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export default function AbsencesPage() {
   const router = useRouter()
 
@@ -77,11 +232,11 @@ export default function AbsencesPage() {
     if (!isManager()) router.replace('/dashboard')
   }, [router])
 
-  const { data: employees = [] }      = useEmployees()
+  const { data: employees = [] }           = useEmployees()
   const { data: requests = [], isLoading } = useTeamAbsences()
-  const { data: companySettings } = useCompanySettings()
-  const recordAbsence    = useRecordAbsence()
-  const updateStatus     = useUpdateAbsenceRequestStatus()
+  const { data: companySettings }          = useCompanySettings()
+  const recordAbsence = useRecordAbsence()
+  const updateStatus  = useUpdateAbsenceRequestStatus()
 
   const employeeLabel = (id: string) => {
     const employee = employees.find((e) => e.id === id)
@@ -98,8 +253,11 @@ export default function AbsencesPage() {
       ? countWorkingDays(range.from, range.to, companySettings.state)
       : null
 
-  const openVacationRequests = requests.filter(
-    (r) => (r.type === 'Vacation' || r.type === 'FlexTimeCompensation') && r.status === 'Open',
+  const pendingRequests = requests.filter((r) => r.status === 'Open')
+  const historyRequests = requests.filter((r) => r.status !== 'Open')
+
+  const openVacationRequests = pendingRequests.filter(
+    (r) => r.type === 'Vacation' || r.type === 'FlexTimeCompensation',
   )
   const sickThisMonth = requests.filter((r) =>
     (r.type === 'Sick' || r.type === 'ChildSick') &&
@@ -124,6 +282,9 @@ export default function AbsencesPage() {
       }
     )
   }
+
+  const handleApprove = (id: string) => updateStatus.mutate({ id, status: 'Approved' })
+  const handleReject  = (id: string) => updateStatus.mutate({ id, status: 'Rejected' })
 
   return (
     <div className="flex flex-col gap-6">
@@ -263,97 +424,31 @@ export default function AbsencesPage() {
           </CardContent>
         </Card>
 
-        {/* Team overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <CalendarDays className="size-4" />
-              Fehlzeiten im Team
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Mitarbeiter</TableHead>
-                  <TableHead>Art</TableHead>
-                  <TableHead>Zeitraum</TableHead>
-                  <TableHead>Tage</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Kommentar</TableHead>
-                  <TableHead className="text-right">Aktion</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {requests.map((a) => {
-                  const cfg = statusConfig[a.status]
-                  return (
-                    <TableRow key={a.id} className="hover:bg-muted/50 transition-colors">
-                      <TableCell className="font-medium">{a.userName}</TableCell>
-                      <TableCell>
-                        <span className="flex items-center gap-1.5 text-muted-foreground">
-                          {typeIcon[a.type]} {typeLabel[a.type]}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {format(new Date(a.startDate), 'dd.MM.yyyy')}
-                        <span> – </span>
-                        {format(new Date(a.endDate), 'dd.MM.yyyy')}
-                      </TableCell>
-                      <TableCell className="font-medium tabular-nums">{a.businessDays}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={cfg.variant}
-                          className={cn('flex w-fit items-center gap-1', cfg.className ?? '')}
-                        >
-                          {cfg.icon}
-                          {statusLabel[a.status]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{a.comment ?? '—'}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-success text-success hover:bg-success/10"
-                            disabled={updateStatus.isPending || a.status === 'Approved'}
-                            onClick={() => updateStatus.mutate({ id: a.id, status: 'Approved' })}
-                          >
-                            Genehmigen
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-destructive text-destructive hover:bg-destructive/10"
-                            disabled={updateStatus.isPending || a.status === 'Rejected'}
-                            onClick={() => updateStatus.mutate({ id: a.id, status: 'Rejected' })}
-                          >
-                            Ablehnen
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-                {isLoading && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
-                      Lade Fehlzeiten…
-                    </TableCell>
-                  </TableRow>
-                )}
-                {!isLoading && requests.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
-                      Noch keine Fehlzeiten erfasst
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        {/* Open requests — expanded by default */}
+        <CollapsibleRequestsCard
+          title="Offene Anträge"
+          count={pendingRequests.length}
+          defaultOpen={true}
+          isLoading={isLoading}
+          emptyMessage="Keine offenen Anträge"
+          rows={pendingRequests}
+          showActions={true}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          actionPending={updateStatus.isPending}
+        />
+
+        {/* History — collapsed by default */}
+        <CollapsibleRequestsCard
+          title="Historie"
+          count={historyRequests.length}
+          defaultOpen={false}
+          isLoading={isLoading}
+          emptyMessage="Noch keine bearbeiteten Anträge"
+          rows={historyRequests}
+          showActions={false}
+        />
+
       </div>
     </div>
   )

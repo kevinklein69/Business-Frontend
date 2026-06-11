@@ -1,8 +1,11 @@
 'use client'
 
-import { format } from 'date-fns'
-import { Clock, CalendarDays, TrendingUp, TrendingDown } from 'lucide-react'
+import { useState } from 'react'
+import { format, addMonths, subMonths, startOfMonth } from 'date-fns'
+import { de } from 'date-fns/locale'
+import { Clock, CalendarDays, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
@@ -27,7 +30,14 @@ function formatMinutes(minutes: number) {
 }
 
 export default function TimeTrackingPage() {
-  const { data: entries = [], isLoading: entriesLoading } = useTimeEntries()
+  const now = new Date()
+  const [viewDate, setViewDate] = useState(startOfMonth(now))
+
+  const viewYear  = viewDate.getFullYear()
+  const viewMonth = viewDate.getMonth() + 1
+  const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth() + 1
+
+  const { data: entries = [], isLoading: entriesLoading } = useTimeEntries(viewYear, viewMonth)
   const { data: balance, isLoading: balanceLoading, isError: balanceError } = useTimeBalance()
 
   const hasBalance        = !!balance
@@ -36,6 +46,8 @@ export default function TimeTrackingPage() {
   const weekPercent       = Math.min(Math.round((weekMinutes / weekTargetMinutes) * 100), 130)
   const weekDiff          = weekMinutes - weekTargetMinutes
   const balanceText       = balanceLoading ? 'Lädt…' : balanceError ? '—' : null
+
+  const totalNetMinutes = entries.reduce((sum, e) => sum + e.netDurationMinutes, 0)
 
   return (
     <div className="flex flex-col gap-6">
@@ -70,7 +82,6 @@ export default function TimeTrackingPage() {
                 {formatDiff(weekDiff)} gegenüber Sollzeit
               </p>
             </div>
-            {/* Progress bar: neutral fill + green (Überstunden) or red (Minusstunden) */}
             <div className="flex flex-col gap-1.5">
               <div className="h-3 w-full rounded-full bg-muted overflow-hidden flex">
                 {weekPercent >= 100 ? (
@@ -142,13 +153,35 @@ export default function TimeTrackingPage() {
         </Card>
       </div>
 
-      {/* Recent bookings table */}
+      {/* Monthly bookings table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <Clock className="size-4" />
-            Letzte Buchungen
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Clock className="size-4" />
+              {format(viewDate, 'MMMM yyyy', { locale: de })}
+              {isCurrentMonth && <span className="text-xs font-normal text-muted-foreground">(aktueller Monat)</span>}
+            </CardTitle>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7"
+                onClick={() => setViewDate(d => subMonths(d, 1))}
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7"
+                disabled={isCurrentMonth}
+                onClick={() => setViewDate(d => addMonths(d, 1))}
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -157,27 +190,28 @@ export default function TimeTrackingPage() {
                 <TableHead>Datum</TableHead>
                 <TableHead>Von</TableHead>
                 <TableHead>Bis</TableHead>
-                <TableHead>Dauer</TableHead>
+                <TableHead>Pause</TableHead>
+                <TableHead>Netto</TableHead>
                 <TableHead>Differenz</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {entriesLoading && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
                     Lade Buchungen…
                   </TableCell>
                 </TableRow>
               )}
               {!entriesLoading && entries.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
-                    Noch keine Buchungen vorhanden
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                    Keine Buchungen in diesem Monat
                   </TableCell>
                 </TableRow>
               )}
               {entries.map((b) => {
-                const diff = b.durationMinutes - DAILY_TARGET_MINUTES
+                const diff = b.netDurationMinutes - DAILY_TARGET_MINUTES
                 return (
                   <TableRow key={b.clockIn} className="hover:bg-muted/50 transition-colors">
                     <TableCell className="font-medium">
@@ -185,7 +219,10 @@ export default function TimeTrackingPage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground tabular-nums">{format(new Date(b.clockIn), 'HH:mm')}</TableCell>
                     <TableCell className="text-muted-foreground tabular-nums">{format(new Date(b.clockOut), 'HH:mm')}</TableCell>
-                    <TableCell className="font-semibold tabular-nums">{formatMinutes(b.durationMinutes)}</TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">
+                      {b.breakMinutes > 0 ? `${b.breakMinutes} min` : '—'}
+                    </TableCell>
+                    <TableCell className="font-semibold tabular-nums">{formatMinutes(b.netDurationMinutes)}</TableCell>
                     <TableCell>
                       <span className={cn(
                         'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums',
@@ -201,6 +238,17 @@ export default function TimeTrackingPage() {
               })}
             </TableBody>
           </Table>
+
+          {/* Monthly total */}
+          {!entriesLoading && entries.length > 0 && (
+            <div className="flex items-center justify-between border-t px-4 py-3 text-sm font-medium">
+              <span className="text-muted-foreground">{entries.length} {entries.length === 1 ? 'Buchung' : 'Buchungen'}</span>
+              <span>
+                Gesamt:{' '}
+                <span className="tabular-nums font-bold">{formatMinutes(totalNetMinutes)} h</span>
+              </span>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

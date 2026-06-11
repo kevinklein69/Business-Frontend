@@ -2,11 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import type { Balance, TimeEntry, ToggleClockResult } from '@/types'
 
-export function useTimeEntries() {
+export function useTimeEntries(year: number, month: number) {
   return useQuery({
-    queryKey: ['time-tracking', 'entries'],
+    queryKey: ['time-tracking', 'entries', year, month],
     queryFn: async () => {
-      const res = await apiClient.get<TimeEntry[]>('/api/time-tracking/entries')
+      const res = await apiClient.get<TimeEntry[]>(`/api/time-tracking/entries?year=${year}&month=${month}`)
       return res.data
     },
   })

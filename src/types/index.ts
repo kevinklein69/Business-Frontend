@@ -31,7 +31,9 @@ export interface TimeEntry {
   date: string
   clockIn: string
   clockOut: string
-  durationMinutes: number
+  grossDurationMinutes: number
+  breakMinutes: number
+  netDurationMinutes: number
 }
 
 export interface Balance {

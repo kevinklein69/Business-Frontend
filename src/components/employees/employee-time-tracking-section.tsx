@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { format, addMonths, subMonths, startOfMonth } from 'date-fns'
 import { de } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Clock, XCircle, Pencil, MessageSquare } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, XCircle, Pencil, MessageSquare, ClipboardList } from 'lucide-react'
 import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
@@ -137,6 +137,11 @@ export function EmployeeTimeTrackingSection({ employeeId }: { employeeId: string
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap items-center gap-1">
+                      {b.orderTitle && (
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          <ClipboardList className="size-3" /> {b.orderTitle}
+                        </Badge>
+                      )}
                       {b.isManual && (
                         <Badge variant="secondary" className="flex items-center gap-1">
                           <Pencil className="size-3" /> Manuell

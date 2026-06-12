@@ -40,6 +40,8 @@ export interface TimeEntry {
   isManual: boolean
   status: TimeEntryStatus
   note?: string | null
+  orderId?: string | null
+  orderTitle?: string | null
 }
 
 export interface PendingTimeEntry {
@@ -65,6 +67,17 @@ export interface Balance {
 export interface ToggleClockResult {
   isClockedIn: boolean
   clockIn?: string
+}
+
+export interface OrderClockStatus {
+  isClockedIn: boolean
+  clockIn?: string
+}
+
+export interface OrderTimeBreakdownEntry {
+  userId: string
+  userName: string
+  netMinutes: number
 }
 
 export type OrderStatus = 'ToDo' | 'InProgress' | 'ReadyForAcceptance' | 'Invoicing' | 'Done'

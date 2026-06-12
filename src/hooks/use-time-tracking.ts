@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import type { Balance, PendingTimeEntry, TimeEntry, TimeEntryStatus, ToggleClockResult } from '@/types'
+import type { Balance, OrderClockStatus, OrderTimeBreakdownEntry, PendingTimeEntry, TimeEntry, TimeEntryStatus, ToggleClockResult } from '@/types'
 
 export interface ManualEntryInput {
   date: string
@@ -107,6 +107,45 @@ export function usePendingEntries() {
     queryFn: async () => {
       const res = await apiClient.get<PendingTimeEntry[]>('/api/time-tracking/pending')
       return res.data
+    },
+  })
+}
+
+/** Stempel-Status des aktuellen Benutzers für einen bestimmten Auftrag (Auftrags-Stempel). */
+export function useOrderClockStatus(orderId: string) {
+  return useQuery({
+    queryKey: ['time-tracking', 'order-status', orderId],
+    queryFn: async () => {
+      const res = await apiClient.get<OrderClockStatus>(`/api/orders/${orderId}/clock-status`)
+      return res.data
+    },
+    enabled: !!orderId,
+  })
+}
+
+/** Pro-Mitarbeiter-Aufstellung der für diesen Auftrag geleisteten Netto-Minuten. */
+export function useOrderTimeBreakdown(orderId: string) {
+  return useQuery({
+    queryKey: ['time-tracking', 'order-breakdown', orderId],
+    queryFn: async () => {
+      const res = await apiClient.get<OrderTimeBreakdownEntry[]>(`/api/orders/${orderId}/time-breakdown`)
+      return res.data
+    },
+    enabled: !!orderId,
+  })
+}
+
+/** Ein-/Ausstempeln für einen bestimmten Auftrag. Aktualisiert auch Order.actualHours. */
+export function useToggleOrderClock(orderId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.post<OrderClockStatus>(`/api/orders/${orderId}/clock`)
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['time-tracking'] })
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
     },
   })
 }

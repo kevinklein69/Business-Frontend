@@ -334,7 +334,7 @@ export function SprintPlanningBoard() {
     title: string; customer?: string; street: string; houseNumber: string; zip: string; city: string
     description?: string; assigneeIds: string[]
     revenue?: number; invoiceDate?: string; estimatedHours?: number
-    plannedStartDate?: string; plannedEndDate?: string; actualHours?: number
+    plannedStartDate?: string; plannedEndDate?: string
     deviationReason?: string; positions: OrderPositionInput[]
   }) => {
     if (!detailFresh) return

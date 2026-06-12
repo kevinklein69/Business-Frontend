@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { format, addMonths, subMonths, startOfMonth } from 'date-fns'
 import { de } from 'date-fns/locale'
 import {
-  Clock, CalendarDays, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Pencil, XCircle, MessageSquare,
+  Clock, CalendarDays, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Pencil, XCircle, MessageSquare, ClipboardList,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -241,6 +241,11 @@ export default function TimeTrackingPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap items-center gap-1">
+                        {b.orderTitle && (
+                          <Badge variant="outline" className="flex items-center gap-1">
+                            <ClipboardList className="size-3" /> {b.orderTitle}
+                          </Badge>
+                        )}
                         {b.isManual && (
                           <Badge variant="secondary" className="flex items-center gap-1">
                             <Pencil className="size-3" /> Manuell erfasst

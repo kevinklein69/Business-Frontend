@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Building2, CalendarRange, Download, Euro, AlertTriangle, FileSignature, MapPin, Paperclip, Trash2, Upload } from 'lucide-react'
+import { Building2, CalendarRange, Clock, Download, Euro, AlertTriangle, FileSignature, MapPin, Paperclip, Trash2, Upload } from 'lucide-react'
 import { format } from 'date-fns'
 import {
   DndContext, DragOverlay, PointerSensor,
@@ -19,14 +19,17 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { formatMinutes } from '@/lib/format'
 import { useIsManager } from '@/lib/auth'
 import { useEmployees } from '@/hooks/use-employees'
+import { useOrderClockStatus, useOrderTimeBreakdown } from '@/hooks/use-time-tracking'
 import {
   downloadOrderAttachment, useDeleteOrderAttachment, useOrders,
   useUpdateOrder, useUpdateOrderStatus, useUploadOrderAttachments,
 } from '@/hooks/use-orders'
 import { AcceptanceDialog } from './acceptance-dialog'
 import { AssigneePicker } from './assignee-picker'
+import { OrderClockButton } from './order-clock-button'
 import { FileUploadZone, fileIcon, formatFileSize } from './file-upload-zone'
 import {
   OrderPositionsEditor, isPositionRowEmpty, isPositionRowValid, toPositionInputs,
@@ -73,7 +76,7 @@ export function OrderDetailDialog({
     title: string; customer?: string; street: string; houseNumber: string; zip: string; city: string
     description?: string; assigneeIds: string[]
     revenue?: number; invoiceDate?: string; estimatedHours?: number
-    plannedStartDate?: string; plannedEndDate?: string; actualHours?: number
+    plannedStartDate?: string; plannedEndDate?: string
     deviationReason?: string; positions: OrderPositionInput[]
   }) => void
 }) {
@@ -90,7 +93,6 @@ export function OrderDetailDialog({
   const [estimatedHours,   setEstimatedHours]   = useState(order.estimatedHours?.toString() ?? '')
   const [plannedStartDate, setPlannedStartDate] = useState(order.plannedStartDate ?? '')
   const [plannedEndDate,   setPlannedEndDate]   = useState(order.plannedEndDate ?? '')
-  const [actualHours,      setActualHours]      = useState(order.actualHours?.toString() ?? '')
   const [deviationReason,  setDeviationReason]  = useState(order.deviationReason ?? '')
   const [positions,        setPositions]        = useState<PositionRow[]>(
     order.positions.map((p) => ({
@@ -106,15 +108,17 @@ export function OrderDetailDialog({
   const uploadAttachments = useUploadOrderAttachments()
   const deleteAttachment  = useDeleteOrderAttachment()
   const isManager         = useIsManager()
+  const { data: timeBreakdown } = useOrderTimeBreakdown(order.id)
 
   const num = (s: string) => (s.trim() === '' ? undefined : parseFloat(s))
   const str = (s: string) => (s.trim() === '' ? undefined : s)
 
   const positionsValid = positions.every((row) => isPositionRowEmpty(row) || isPositionRowValid(row))
+  const addressValid = !!(street.trim() && houseNumber.trim() && zip.trim() && city.trim())
 
   const handleSave = () => {
     setSaveAttempted(true)
-    if (!positionsValid) return
+    if (!positionsValid || !addressValid) return
     onSave({
       title:       title.trim() || order.title,
       customer:    customer.trim() || undefined,
@@ -129,7 +133,6 @@ export function OrderDetailDialog({
       estimatedHours:   num(estimatedHours),
       plannedStartDate: str(plannedStartDate),
       plannedEndDate:   str(plannedEndDate),
-      actualHours:      num(actualHours),
       deviationReason:  str(deviationReason),
       positions: toPositionInputs(positions),
     })
@@ -208,6 +211,7 @@ export function OrderDetailDialog({
                 onChange={(e) => setStreet(e.target.value)}
                 placeholder="Straße"
                 required
+                aria-invalid={saveAttempted && !street.trim()}
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -218,6 +222,7 @@ export function OrderDetailDialog({
                 onChange={(e) => setHouseNumber(e.target.value)}
                 placeholder="Nr."
                 required
+                aria-invalid={saveAttempted && !houseNumber.trim()}
               />
             </div>
           </div>
@@ -230,6 +235,7 @@ export function OrderDetailDialog({
                 onChange={(e) => setZip(e.target.value)}
                 placeholder="PLZ"
                 required
+                aria-invalid={saveAttempted && !zip.trim()}
               />
             </div>
             <div className="col-span-2 flex flex-col gap-1.5">
@@ -240,9 +246,13 @@ export function OrderDetailDialog({
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="Ort"
                 required
+                aria-invalid={saveAttempted && !city.trim()}
               />
             </div>
           </div>
+          {saveAttempted && !addressValid && (
+            <p className="text-xs text-destructive">Bitte Straße, Hausnummer, PLZ und Ort angeben.</p>
+          )}
 
           {/* Beschreibung */}
           <div className="flex flex-col gap-1.5">
@@ -297,18 +307,34 @@ export function OrderDetailDialog({
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="d-actual-hours">Ist-Stunden</Label>
-                <Input
+                <div
                   id="d-actual-hours"
-                  type="number"
-                  step="0.25"
-                  min="0"
-                  placeholder="z.B. 9.5"
-                  value={actualHours}
-                  onChange={(e) => setActualHours(e.target.value)}
-                />
+                  className="flex h-9 items-center rounded-lg border border-input bg-muted px-2.5 text-sm text-muted-foreground"
+                >
+                  {order.actualHours != null ? `${formatMinutes(Math.round(order.actualHours * 60))} h` : '–'}
+                </div>
               </div>
             </div>
-            {actualHours.trim() !== '' && (
+            <div className="flex flex-col gap-1.5">
+              <Label className="flex items-center gap-1.5">
+                <Clock className="size-3.5" /> Auftrags-Stempel
+              </Label>
+              <OrderClockButton orderId={order.id} />
+            </div>
+            {timeBreakdown != null && timeBreakdown.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                <Label>Geleistete Zeit pro Mitarbeiter</Label>
+                <div className="flex flex-col gap-1 rounded-lg border border-input p-2.5 text-sm">
+                  {timeBreakdown.map((entry) => (
+                    <div key={entry.userId} className="flex items-center justify-between">
+                      <span>{entry.userName}</span>
+                      <span className="text-muted-foreground">{formatMinutes(entry.netMinutes)} h</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {order.actualHours != null && (
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="d-deviation-reason">Abweichungsgrund</Label>
                 <textarea
@@ -453,6 +479,8 @@ function KanbanCard({
   onOpen?: (a: Order) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: order.id })
+  const { data: clockStatus } = useOrderClockStatus(order.id)
+  const isClockedIn = !!clockStatus?.isClockedIn
 
   const hasDeviation =
     order.status === 'Done' &&
@@ -484,7 +512,7 @@ function KanbanCard({
         </CardHeader>
 
         {(order.customer || hasAddress || order.description || order.assignees.length > 0
-          || order.revenue != null || hasPlannedRange || hasDeviation) && (
+          || order.revenue != null || hasPlannedRange || hasDeviation || isClockedIn) && (
           <CardContent className="flex flex-col gap-2">
             {order.customer && (
               <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -501,8 +529,14 @@ function KanbanCard({
             {order.description && (
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
             )}
-            {(order.revenue != null || hasPlannedRange || hasDeviation) && (
+            {(order.revenue != null || hasPlannedRange || hasDeviation || isClockedIn) && (
               <div className="flex items-center gap-1.5 flex-wrap">
+                {isClockedIn && (
+                  <Badge variant="outline" className="gap-1 text-xs font-normal border-success text-success bg-success/10">
+                    <Clock className="size-3" />
+                    Eingestempelt
+                  </Badge>
+                )}
                 {order.revenue != null && (
                   <Badge variant="outline" className="gap-1 text-xs font-normal">
                     <Euro className="size-3" />
@@ -625,7 +659,7 @@ export function KanbanBoard({ periodId }: { periodId: string | null }) {
     title: string; customer?: string; street: string; houseNumber: string; zip: string; city: string
     description?: string; assigneeIds: string[]
     revenue?: number; invoiceDate?: string; estimatedHours?: number
-    plannedStartDate?: string; plannedEndDate?: string; actualHours?: number
+    plannedStartDate?: string; plannedEndDate?: string
     deviationReason?: string; positions: OrderPositionInput[]
   }) => {
     if (!detailOrder) return

@@ -16,7 +16,6 @@ export interface UpsertOrderInput {
   estimatedHours?: number | null
   plannedStartDate?: string | null
   plannedEndDate?: string | null
-  actualHours?: number | null
   deviationReason?: string | null
   positions: OrderPositionInput[]
 }

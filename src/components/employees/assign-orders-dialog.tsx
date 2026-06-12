@@ -47,7 +47,6 @@ export function AssignOrdersDialog({ employee, onClose }: { employee: Employee; 
       estimatedHours: order.estimatedHours,
       plannedStartDate: order.plannedStartDate,
       plannedEndDate: order.plannedEndDate,
-      actualHours: order.actualHours,
       deviationReason: order.deviationReason,
       positions: order.positions.map((p) => ({
         description: p.description,

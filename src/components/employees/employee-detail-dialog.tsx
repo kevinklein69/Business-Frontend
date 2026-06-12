@@ -8,6 +8,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { useEmployee } from '@/hooks/use-employees'
 import { useIsManager } from '@/lib/auth'
+import { cn } from '@/lib/utils'
+import { EmployeeTimeTrackingSection } from '@/components/employees/employee-time-tracking-section'
 import type { Role } from '@/types'
 
 const roleLabel: Record<Role, string> = {
@@ -45,7 +47,7 @@ export function EmployeeDetailDialog({ employeeId, onClose }: { employeeId: stri
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl sm:max-w-2xl">
+      <DialogContent className={cn('sm:max-w-2xl', isManager && 'sm:max-w-3xl')}>
         <DialogHeader>
           <DialogTitle>Mitarbeiterdetails</DialogTitle>
         </DialogHeader>
@@ -82,6 +84,13 @@ export function EmployeeDetailDialog({ employeeId, onClose }: { employeeId: stri
                 </>
               )}
             </Section>
+
+            {isManager && (
+              <div className="flex flex-col gap-3 border-t pt-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Zeiterfassung</p>
+                <EmployeeTimeTrackingSection employeeId={employeeId} />
+              </div>
+            )}
           </div>
         )}
 

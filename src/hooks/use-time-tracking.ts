@@ -39,6 +39,28 @@ export function useTimeBalance() {
   })
 }
 
+/** Für Chef/Manager: Zeiteinträge eines bestimmten Mitarbeiters in einem Monat. */
+export function useEmployeeTimeEntries(employeeId: string, year: number, month: number) {
+  return useQuery({
+    queryKey: ['time-tracking', 'entries', employeeId, year, month],
+    queryFn: async () => {
+      const res = await apiClient.get<TimeEntry[]>(`/api/time-tracking/entries/${employeeId}?year=${year}&month=${month}`)
+      return res.data
+    },
+  })
+}
+
+/** Für Chef/Manager: Zeitkonto-Saldo eines bestimmten Mitarbeiters. */
+export function useEmployeeTimeBalance(employeeId: string) {
+  return useQuery({
+    queryKey: ['time-tracking', 'balance', employeeId],
+    queryFn: async () => {
+      const res = await apiClient.get<Balance>(`/api/time-tracking/balance/${employeeId}`)
+      return res.data
+    },
+  })
+}
+
 export function useToggleClock() {
   const queryClient = useQueryClient()
   return useMutation({

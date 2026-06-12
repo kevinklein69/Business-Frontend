@@ -331,7 +331,8 @@ export function SprintPlanningBoard() {
     : null
 
   const handleSaveDetail = (updated: {
-    title: string; customer?: string; description?: string; assigneeIds: string[]
+    title: string; customer?: string; street: string; houseNumber: string; zip: string; city: string
+    description?: string; assigneeIds: string[]
     revenue?: number; invoiceDate?: string; estimatedHours?: number
     plannedStartDate?: string; plannedEndDate?: string; actualHours?: number
     deviationReason?: string; positions: OrderPositionInput[]

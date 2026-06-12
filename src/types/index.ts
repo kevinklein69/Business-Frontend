@@ -112,6 +112,10 @@ export interface Order {
   title: string
   description?: string
   customer?: string
+  street: string
+  houseNumber: string
+  zip: string
+  city: string
   status: OrderStatus
   planningPeriodId?: string | null
   assignees: Assignee[]

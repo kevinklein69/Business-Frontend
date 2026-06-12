@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Building2, CalendarRange, Download, Euro, AlertTriangle, FileSignature, Paperclip, Trash2, Upload } from 'lucide-react'
+import { Building2, CalendarRange, Download, Euro, AlertTriangle, FileSignature, MapPin, Paperclip, Trash2, Upload } from 'lucide-react'
 import { format } from 'date-fns'
 import {
   DndContext, DragOverlay, PointerSensor,
@@ -70,7 +70,8 @@ export function OrderDetailDialog({
   open: boolean
   onClose: () => void
   onSave: (updated: {
-    title: string; customer?: string; description?: string; assigneeIds: string[]
+    title: string; customer?: string; street: string; houseNumber: string; zip: string; city: string
+    description?: string; assigneeIds: string[]
     revenue?: number; invoiceDate?: string; estimatedHours?: number
     plannedStartDate?: string; plannedEndDate?: string; actualHours?: number
     deviationReason?: string; positions: OrderPositionInput[]
@@ -78,6 +79,10 @@ export function OrderDetailDialog({
 }) {
   const [title,            setTitle]            = useState(order.title)
   const [customer,         setCustomer]         = useState(order.customer ?? '')
+  const [street,           setStreet]           = useState(order.street)
+  const [houseNumber,      setHouseNumber]      = useState(order.houseNumber)
+  const [zip,              setZip]              = useState(order.zip)
+  const [city,             setCity]             = useState(order.city)
   const [description,      setDescription]      = useState(order.description ?? '')
   const [assignees,        setAssignees]        = useState<Assignee[]>(order.assignees)
   const [revenue,          setRevenue]          = useState(order.revenue?.toString() ?? '')
@@ -113,6 +118,10 @@ export function OrderDetailDialog({
     onSave({
       title:       title.trim() || order.title,
       customer:    customer.trim() || undefined,
+      street:      street.trim(),
+      houseNumber: houseNumber.trim(),
+      zip:         zip.trim(),
+      city:        city.trim(),
       description: description.trim() || undefined,
       assigneeIds: assignees.map((a) => a.id),
       revenue:          num(revenue),
@@ -185,6 +194,54 @@ export function OrderDetailDialog({
               onChange={(e) => setCustomer(e.target.value)}
               placeholder="Kundenname"
             />
+          </div>
+
+          {/* Adresse */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2 flex flex-col gap-1.5">
+              <Label htmlFor="d-street" className="flex items-center gap-1.5">
+                <MapPin className="size-3.5" /> Straße *
+              </Label>
+              <Input
+                id="d-street"
+                value={street}
+                onChange={(e) => setStreet(e.target.value)}
+                placeholder="Straße"
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="d-house-number">Hausnummer *</Label>
+              <Input
+                id="d-house-number"
+                value={houseNumber}
+                onChange={(e) => setHouseNumber(e.target.value)}
+                placeholder="Nr."
+                required
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="d-zip">PLZ *</Label>
+              <Input
+                id="d-zip"
+                value={zip}
+                onChange={(e) => setZip(e.target.value)}
+                placeholder="PLZ"
+                required
+              />
+            </div>
+            <div className="col-span-2 flex flex-col gap-1.5">
+              <Label htmlFor="d-city">Ort *</Label>
+              <Input
+                id="d-city"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="Ort"
+                required
+              />
+            </div>
           </div>
 
           {/* Beschreibung */}
@@ -404,6 +461,7 @@ function KanbanCard({
     Math.abs(order.actualHours - order.estimatedHours) > 0.01
 
   const hasPlannedRange = !!(order.plannedStartDate || order.plannedEndDate)
+  const hasAddress = !!(order.street || order.houseNumber || order.zip || order.city)
 
   return (
     <div
@@ -425,13 +483,19 @@ function KanbanCard({
           <CardTitle className="text-sm leading-snug">{order.title}</CardTitle>
         </CardHeader>
 
-        {(order.customer || order.description || order.assignees.length > 0
+        {(order.customer || hasAddress || order.description || order.assignees.length > 0
           || order.revenue != null || hasPlannedRange || hasDeviation) && (
           <CardContent className="flex flex-col gap-2">
             {order.customer && (
               <p className="text-sm text-muted-foreground flex items-center gap-1">
                 <Building2 className="size-3 shrink-0" />
                 {order.customer}
+              </p>
+            )}
+            {hasAddress && (
+              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                <MapPin className="size-3 shrink-0" />
+                {order.street} {order.houseNumber}, {order.zip} {order.city}
               </p>
             )}
             {order.description && (
@@ -558,7 +622,8 @@ export function KanbanBoard({ periodId }: { periodId: string | null }) {
   }
 
   const handleSaveDetail = (updated: {
-    title: string; customer?: string; description?: string; assigneeIds: string[]
+    title: string; customer?: string; street: string; houseNumber: string; zip: string; city: string
+    description?: string; assigneeIds: string[]
     revenue?: number; invoiceDate?: string; estimatedHours?: number
     plannedStartDate?: string; plannedEndDate?: string; actualHours?: number
     deviationReason?: string; positions: OrderPositionInput[]

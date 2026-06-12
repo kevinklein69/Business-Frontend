@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { isAxiosError } from 'axios'
-import { Building2, CalendarRange, Plus } from 'lucide-react'
+import { Building2, CalendarRange, MapPin, Plus } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader,
   DialogTitle, DialogTrigger, DialogFooter,
@@ -32,6 +32,10 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [customer, setCustomer] = useState('')
+  const [street, setStreet] = useState('')
+  const [houseNumber, setHouseNumber] = useState('')
+  const [zip, setZip] = useState('')
+  const [city, setCity] = useState('')
   const [description, setDescription] = useState('')
   const [plannedStartDate, setPlannedStartDate] = useState('')
   const [plannedEndDate, setPlannedEndDate] = useState('')
@@ -50,6 +54,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
 
   const reset = () => {
     setTitle(''); setCustomer(''); setDescription('')
+    setStreet(''); setHouseNumber(''); setZip(''); setCity('')
     setPlannedStartDate(''); setPlannedEndDate('')
     setAssignees([]); setPositions([]); setFiles([])
     setTouched({}); setSubmitAttempted(false)
@@ -68,6 +73,10 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
   const fieldErrors = {
     title: title.trim() ? null : 'Der Titel ist erforderlich.',
     customer: customer.trim() ? null : 'Der Kunde ist erforderlich.',
+    street: street.trim() ? null : 'Die Straße ist erforderlich.',
+    houseNumber: houseNumber.trim() ? null : 'Die Hausnummer ist erforderlich.',
+    zip: zip.trim() ? null : 'Die PLZ ist erforderlich.',
+    city: city.trim() ? null : 'Der Ort ist erforderlich.',
     plannedStartDate: plannedStartDate ? null : 'Das Startdatum ist erforderlich.',
     plannedEndDate: !plannedEndDate
       ? 'Das Enddatum ist erforderlich.'
@@ -89,6 +98,10 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
       const order = await createOrder.mutateAsync({
         title: title.trim(),
         customer: customer.trim(),
+        street: street.trim(),
+        houseNumber: houseNumber.trim(),
+        zip: zip.trim(),
+        city: city.trim(),
         description: description.trim() || undefined,
         plannedStartDate,
         plannedEndDate,
@@ -170,6 +183,78 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
             {showError('customer') && fieldErrors.customer && (
               <p className="text-sm text-destructive">{fieldErrors.customer}</p>
             )}
+          </div>
+
+          {/* Adresse */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2 flex flex-col gap-1.5">
+              <Label htmlFor="n-street" className="flex items-center gap-1.5">
+                <MapPin className="size-3.5" /> Straße *
+              </Label>
+              <Input
+                id="n-street"
+                value={street}
+                onChange={(e) => setStreet(e.target.value)}
+                onBlur={markTouched('street')}
+                placeholder="Straße"
+                disabled={attachmentFailureMode}
+                required
+                aria-invalid={showError('street') && !!fieldErrors.street}
+              />
+              {showError('street') && fieldErrors.street && (
+                <p className="text-sm text-destructive">{fieldErrors.street}</p>
+              )}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="n-house-number">Hausnummer *</Label>
+              <Input
+                id="n-house-number"
+                value={houseNumber}
+                onChange={(e) => setHouseNumber(e.target.value)}
+                onBlur={markTouched('houseNumber')}
+                placeholder="Nr."
+                disabled={attachmentFailureMode}
+                required
+                aria-invalid={showError('houseNumber') && !!fieldErrors.houseNumber}
+              />
+              {showError('houseNumber') && fieldErrors.houseNumber && (
+                <p className="text-sm text-destructive">{fieldErrors.houseNumber}</p>
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="n-zip">PLZ *</Label>
+              <Input
+                id="n-zip"
+                value={zip}
+                onChange={(e) => setZip(e.target.value)}
+                onBlur={markTouched('zip')}
+                placeholder="PLZ"
+                disabled={attachmentFailureMode}
+                required
+                aria-invalid={showError('zip') && !!fieldErrors.zip}
+              />
+              {showError('zip') && fieldErrors.zip && (
+                <p className="text-sm text-destructive">{fieldErrors.zip}</p>
+              )}
+            </div>
+            <div className="col-span-2 flex flex-col gap-1.5">
+              <Label htmlFor="n-city">Ort *</Label>
+              <Input
+                id="n-city"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                onBlur={markTouched('city')}
+                placeholder="Ort"
+                disabled={attachmentFailureMode}
+                required
+                aria-invalid={showError('city') && !!fieldErrors.city}
+              />
+              {showError('city') && fieldErrors.city && (
+                <p className="text-sm text-destructive">{fieldErrors.city}</p>
+              )}
+            </div>
           </div>
 
           {/* Beschreibung */}

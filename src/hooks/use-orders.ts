@@ -6,6 +6,10 @@ export interface UpsertOrderInput {
   title: string
   description?: string
   customer?: string
+  street: string
+  houseNumber: string
+  zip: string
+  city: string
   assigneeIds: string[]
   revenue?: number | null
   invoiceDate?: string | null

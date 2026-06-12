@@ -97,6 +97,17 @@ export function useUpdateOrderStatus() {
   })
 }
 
+export function useSignOrderAcceptance() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, signerName, signatureImageBase64 }: { id: string; signerName: string; signatureImageBase64: string }) => {
+      const res = await apiClient.post<Order>(`/api/orders/${id}/acceptance`, { signerName, signatureImageBase64 })
+      return res.data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orders'] }),
+  })
+}
+
 export function useUpdateOrderPlanningPeriod() {
   const queryClient = useQueryClient()
   return useMutation({

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Building2, CalendarRange, Download, Euro, AlertTriangle, Paperclip, Trash2, Upload } from 'lucide-react'
+import { Building2, CalendarRange, Download, Euro, AlertTriangle, FileSignature, Paperclip, Trash2, Upload } from 'lucide-react'
 import { format } from 'date-fns'
 import {
   DndContext, DragOverlay, PointerSensor,
@@ -19,11 +19,13 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { useIsManager } from '@/lib/auth'
 import { useEmployees } from '@/hooks/use-employees'
 import {
   downloadOrderAttachment, useDeleteOrderAttachment, useOrders,
   useUpdateOrder, useUpdateOrderStatus, useUploadOrderAttachments,
 } from '@/hooks/use-orders'
+import { AcceptanceDialog } from './acceptance-dialog'
 import { AssigneePicker } from './assignee-picker'
 import { FileUploadZone, fileIcon, formatFileSize } from './file-upload-zone'
 import {
@@ -94,9 +96,11 @@ export function OrderDetailDialog({
   )
   const [saveAttempted, setSaveAttempted] = useState(false)
   const [newFiles,      setNewFiles]      = useState<File[]>([])
+  const [acceptanceOpen, setAcceptanceOpen] = useState(false)
 
   const uploadAttachments = useUploadOrderAttachments()
   const deleteAttachment  = useDeleteOrderAttachment()
+  const isManager         = useIsManager()
 
   const num = (s: string) => (s.trim() === '' ? undefined : parseFloat(s))
   const str = (s: string) => (s.trim() === '' ? undefined : s)
@@ -140,6 +144,7 @@ export function OrderDetailDialog({
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-2xl sm:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
@@ -151,6 +156,16 @@ export function OrderDetailDialog({
           <div className="flex items-center gap-2">
             <Badge variant="secondary">{statusLabel[order.status]}</Badge>
             <span className="text-sm text-muted-foreground">Erstellt am {format(new Date(order.createdAt), 'dd.MM.yyyy')}</span>
+            {order.status === 'ReadyForAcceptance' && isManager && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto"
+                onClick={() => setAcceptanceOpen(true)}
+              >
+                <FileSignature className="size-3.5" /> Kundenabnahme durchführen
+              </Button>
+            )}
           </div>
 
           {/* Titel */}
@@ -364,6 +379,8 @@ export function OrderDetailDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    <AcceptanceDialog order={order} open={acceptanceOpen} onClose={() => setAcceptanceOpen(false)} />
+    </>
   )
 }
 

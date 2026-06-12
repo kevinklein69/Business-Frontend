@@ -5,17 +5,29 @@ import { ClockButton } from '@/components/time-tracking/stamp-button'
 import { ClipboardList, CalendarCheck, TrendingUp, Timer, PartyPopper } from 'lucide-react'
 import { useCompanySettings } from '@/hooks/use-company-settings'
 import { useOrders } from '@/hooks/use-orders'
+import { useTimeBalance } from '@/hooks/use-time-tracking'
+import { useAbsenceRequests } from '@/hooks/use-absences'
 import { getNextHoliday } from '@/lib/holidays'
+import { formatDiff } from '@/lib/format'
+import { cn } from '@/lib/utils'
 import { differenceInCalendarDays, format } from 'date-fns'
 
 export default function DashboardPage() {
   const { data: companySettings } = useCompanySettings()
   const { data: orders = [] } = useOrders()
+  const { data: balance, isLoading: balanceLoading, isError: balanceError } = useTimeBalance()
+  const { data: absenceRequests = [], isLoading: absencesLoading } = useAbsenceRequests()
   const nextHoliday = companySettings ? getNextHoliday(new Date(), companySettings.state) : null
   const daysUntil = nextHoliday ? differenceInCalendarDays(nextHoliday.date, new Date()) : null
 
   const openOrders = orders.filter((o) => o.status !== 'Done')
   const inProgressOrders = orders.filter((o) => o.status === 'InProgress')
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const nextVacation = absenceRequests
+    .filter((a) => a.type === 'Vacation' && a.status === 'Approved' && new Date(a.endDate) >= today)
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())[0]
 
   return (
     <div className="flex flex-col gap-6">
@@ -55,8 +67,16 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">15.07</p>
-            <p className="text-sm text-muted-foreground mt-1">Genehmigt · 5 Tage</p>
+            {absencesLoading ? (
+              <p className="text-sm text-muted-foreground">Lädt…</p>
+            ) : nextVacation ? (
+              <>
+                <p className="text-3xl font-bold">{format(new Date(nextVacation.startDate), 'dd.MM.')}</p>
+                <p className="text-sm text-muted-foreground mt-1">Genehmigt · {nextVacation.businessDays} Tage</p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Kein Urlaub geplant</p>
+            )}
           </CardContent>
         </Card>
 
@@ -68,7 +88,16 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">+2:30</p>
+            {balanceLoading || balanceError || !balance ? (
+              <p className="text-sm text-muted-foreground">{balanceError ? '—' : 'Lädt…'}</p>
+            ) : (
+              <p className={cn(
+                'text-3xl font-bold',
+                balance.totalBalanceMinutes >= 0 ? 'text-success' : 'text-destructive'
+              )}>
+                {formatDiff(balance.totalBalanceMinutes)}
+              </p>
+            )}
             <p className="text-sm text-muted-foreground mt-1">Zeitkonto-Saldo</p>
           </CardContent>
         </Card>

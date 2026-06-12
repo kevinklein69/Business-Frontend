@@ -19,22 +19,10 @@ import { PendingEntriesCard } from '@/components/time-tracking/pending-entries-c
 import { useTimeBalance, useTimeEntries } from '@/hooks/use-time-tracking'
 import { useIsManager } from '@/lib/auth'
 import { cn } from '@/lib/utils'
+import { formatDiff, formatMinutes } from '@/lib/format'
 import type { TimeEntry } from '@/types'
 
 const DAILY_TARGET_MINUTES = 480
-
-function formatDiff(diff: number) {
-  const abs = Math.abs(diff)
-  const h   = Math.floor(abs / 60)
-  const m   = String(abs % 60).padStart(2, '0')
-  return `${diff >= 0 ? '+' : '-'}${h}:${m}h`
-}
-
-function formatMinutes(minutes: number) {
-  const h = Math.floor(minutes / 60)
-  const m = String(minutes % 60).padStart(2, '0')
-  return `${h}:${m}`
-}
 
 export default function TimeTrackingPage() {
   const now = new Date()

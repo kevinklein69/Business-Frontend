@@ -3,16 +3,23 @@
 import { useState } from 'react'
 import { format, addMonths, subMonths, startOfMonth } from 'date-fns'
 import { de } from 'date-fns/locale'
-import { Clock, CalendarDays, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import {
+  Clock, CalendarDays, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Pencil, XCircle, MessageSquare,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { ClockButton } from '@/components/time-tracking/stamp-button'
+import { CreateManualEntryDialog, EditTimeEntryDialog } from '@/components/time-tracking/manual-entry-dialog'
+import { PendingEntriesCard } from '@/components/time-tracking/pending-entries-card'
 import { useTimeBalance, useTimeEntries } from '@/hooks/use-time-tracking'
+import { useIsManager } from '@/lib/auth'
 import { cn } from '@/lib/utils'
+import type { TimeEntry } from '@/types'
 
 const DAILY_TARGET_MINUTES = 480
 
@@ -32,6 +39,8 @@ function formatMinutes(minutes: number) {
 export default function TimeTrackingPage() {
   const now = new Date()
   const [viewDate, setViewDate] = useState(startOfMonth(now))
+  const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null)
+  const isManager = useIsManager()
 
   const viewYear  = viewDate.getFullYear()
   const viewMonth = viewDate.getMonth() + 1
@@ -51,7 +60,10 @@ export default function TimeTrackingPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Zeiterfassung</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold tracking-tight">Zeiterfassung</h1>
+        <CreateManualEntryDialog />
+      </div>
 
       {/* Stempel widget + stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[auto_1fr_1fr_1fr]">
@@ -193,19 +205,21 @@ export default function TimeTrackingPage() {
                 <TableHead>Pause</TableHead>
                 <TableHead>Netto</TableHead>
                 <TableHead>Differenz</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Aktion</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {entriesLoading && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
                     Lade Buchungen…
                   </TableCell>
                 </TableRow>
               )}
               {!entriesLoading && entries.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
                     Keine Buchungen in diesem Monat
                   </TableCell>
                 </TableRow>
@@ -213,7 +227,7 @@ export default function TimeTrackingPage() {
               {entries.map((b) => {
                 const diff = b.netDurationMinutes - DAILY_TARGET_MINUTES
                 return (
-                  <TableRow key={b.clockIn} className="hover:bg-muted/50 transition-colors">
+                  <TableRow key={b.id} className="hover:bg-muted/50 transition-colors">
                     <TableCell className="font-medium">
                       {format(new Date(b.date), 'dd.MM.yyyy')}
                     </TableCell>
@@ -224,14 +238,52 @@ export default function TimeTrackingPage() {
                     </TableCell>
                     <TableCell className="font-semibold tabular-nums">{formatMinutes(b.netDurationMinutes)}</TableCell>
                     <TableCell>
-                      <span className={cn(
-                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums',
-                        diff > 0  && 'bg-success/10 text-success',
-                        diff < 0  && 'bg-destructive/10 text-destructive',
-                        diff === 0 && 'text-muted-foreground'
-                      )}>
-                        {formatDiff(diff)}
-                      </span>
+                      {b.status === 'Approved' ? (
+                        <span className={cn(
+                          'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums',
+                          diff > 0  && 'bg-success/10 text-success',
+                          diff < 0  && 'bg-destructive/10 text-destructive',
+                          diff === 0 && 'text-muted-foreground'
+                        )}>
+                          {formatDiff(diff)}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap items-center gap-1">
+                        {b.isManual && (
+                          <Badge variant="secondary" className="flex items-center gap-1">
+                            <Pencil className="size-3" /> Manuell erfasst
+                          </Badge>
+                        )}
+                        {b.status === 'Pending' && (
+                          <Badge variant="outline" className="flex items-center gap-1">
+                            <Clock className="size-3" /> Ausstehend
+                          </Badge>
+                        )}
+                        {b.status === 'Rejected' && (
+                          <Badge variant="destructive" className="flex items-center gap-1">
+                            <XCircle className="size-3" /> Abgelehnt
+                          </Badge>
+                        )}
+                        {b.note && (
+                          <span title={b.note}>
+                            <MessageSquare className="size-3.5 text-muted-foreground shrink-0" />
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7"
+                        onClick={() => setEditingEntry(b)}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 )
@@ -251,6 +303,12 @@ export default function TimeTrackingPage() {
           )}
         </CardContent>
       </Card>
+
+      {isManager && <PendingEntriesCard />}
+
+      {editingEntry && (
+        <EditTimeEntryDialog entry={editingEntry} onClose={() => setEditingEntry(null)} />
+      )}
     </div>
   )
 }

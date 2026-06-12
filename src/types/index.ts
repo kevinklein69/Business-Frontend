@@ -27,13 +27,31 @@ export interface EmployeeDetail extends Employee {
   sickDaysThisYear: number
 }
 
+export type TimeEntryStatus = 'Approved' | 'Pending' | 'Rejected'
+
 export interface TimeEntry {
+  id: string
   date: string
   clockIn: string
   clockOut: string
   grossDurationMinutes: number
   breakMinutes: number
   netDurationMinutes: number
+  isManual: boolean
+  status: TimeEntryStatus
+  note?: string | null
+}
+
+export interface PendingTimeEntry {
+  id: string
+  userId: string
+  userName: string
+  date: string
+  clockIn: string
+  clockOut: string
+  isManual: boolean
+  status: TimeEntryStatus
+  note?: string | null
 }
 
 export interface Balance {

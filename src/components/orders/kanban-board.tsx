@@ -32,11 +32,7 @@ import { AssigneePicker } from './assignee-picker'
 import { DeleteOrderDialog } from './delete-order-dialog'
 import { OrderClockButton } from './order-clock-button'
 import { FileUploadZone, fileIcon, formatFileSize } from './file-upload-zone'
-import {
-  OrderPositionsEditor, isPositionRowEmpty, isPositionRowValid, toPositionInputs,
-  type PositionRow,
-} from './order-positions-editor'
-import type { Assignee, Employee, Order, OrderPositionInput, OrderStatus } from '@/types'
+import type { Assignee, Employee, Order, OrderStatus } from '@/types'
 
 const COLUMNS: { key: OrderStatus; label: string; badgeVariant: 'default' | 'secondary' | 'outline' }[] = [
   { key: 'ToDo',               label: 'Zu Erledigen',        badgeVariant: 'secondary' },
@@ -78,7 +74,7 @@ export function OrderDetailDialog({
     description?: string; assigneeIds: string[]
     revenue?: number; invoiceDate?: string; estimatedHours?: number
     plannedStartDate?: string; plannedEndDate?: string
-    deviationReason?: string; positions: OrderPositionInput[]
+    deviationReason?: string
   }) => void
 }) {
   const [title,            setTitle]            = useState(order.title)
@@ -95,13 +91,6 @@ export function OrderDetailDialog({
   const [plannedStartDate, setPlannedStartDate] = useState(order.plannedStartDate ?? '')
   const [plannedEndDate,   setPlannedEndDate]   = useState(order.plannedEndDate ?? '')
   const [deviationReason,  setDeviationReason]  = useState(order.deviationReason ?? '')
-  const [positions,        setPositions]        = useState<PositionRow[]>(
-    order.positions.map((p) => ({
-      description: p.description,
-      quantity: p.quantity.toString(),
-      unitPrice: p.unitPrice.toString(),
-    }))
-  )
   const [saveAttempted, setSaveAttempted] = useState(false)
   const [newFiles,      setNewFiles]      = useState<File[]>([])
   const [acceptanceOpen, setAcceptanceOpen] = useState(false)
@@ -115,12 +104,11 @@ export function OrderDetailDialog({
   const num = (s: string) => (s.trim() === '' ? undefined : parseFloat(s))
   const str = (s: string) => (s.trim() === '' ? undefined : s)
 
-  const positionsValid = positions.every((row) => isPositionRowEmpty(row) || isPositionRowValid(row))
   const addressValid = !!(street.trim() && houseNumber.trim() && zip.trim() && city.trim())
 
   const handleSave = () => {
     setSaveAttempted(true)
-    if (!positionsValid || !addressValid) return
+    if (!addressValid) return
     onSave({
       title:       title.trim() || order.title,
       customer:    customer.trim() || undefined,
@@ -136,7 +124,6 @@ export function OrderDetailDialog({
       plannedStartDate: str(plannedStartDate),
       plannedEndDate:   str(plannedEndDate),
       deviationReason:  str(deviationReason),
-      positions: toPositionInputs(positions),
     })
     onClose()
   }
@@ -387,15 +374,6 @@ export function OrderDetailDialog({
                 />
               </div>
             </div>
-          </div>
-
-          {/* Positionen */}
-          <div className="border-t pt-3">
-            <OrderPositionsEditor
-              positions={positions}
-              onChange={setPositions}
-              showErrors={saveAttempted}
-            />
           </div>
 
           {/* Anhänge */}
@@ -680,7 +658,7 @@ export function KanbanBoard({ periodId }: { periodId: string | null }) {
     description?: string; assigneeIds: string[]
     revenue?: number; invoiceDate?: string; estimatedHours?: number
     plannedStartDate?: string; plannedEndDate?: string
-    deviationReason?: string; positions: OrderPositionInput[]
+    deviationReason?: string
   }) => {
     if (!detailOrder) return
     updateOrder.mutate({ id: detailOrder.id, ...updated })

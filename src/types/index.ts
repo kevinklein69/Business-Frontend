@@ -98,20 +98,6 @@ export interface Assignee {
   name: string
 }
 
-export interface OrderPosition {
-  id: string
-  description: string
-  quantity: number
-  unitPrice: number
-  sortOrder: number
-}
-
-export interface OrderPositionInput {
-  description: string
-  quantity: number
-  unitPrice: number
-}
-
 export interface OrderAttachment {
   id: string
   fileName: string
@@ -140,7 +126,6 @@ export interface Order {
   plannedEndDate?: string | null
   actualHours?: number | null
   deviationReason?: string | null
-  positions: OrderPosition[]
   attachments: OrderAttachment[]
 }
 

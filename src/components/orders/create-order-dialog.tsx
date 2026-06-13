@@ -17,10 +17,6 @@ import { useCreateOrder, useUploadOrderAttachments } from '@/hooks/use-orders'
 import { usePlanningPeriods } from '@/hooks/use-planning-periods'
 import { AssigneePicker } from './assignee-picker'
 import { FileUploadZone } from './file-upload-zone'
-import {
-  OrderPositionsEditor, isPositionRowEmpty, isPositionRowValid, toPositionInputs,
-  type PositionRow,
-} from './order-positions-editor'
 import type { Assignee, Employee, Order, PlanningPeriod } from '@/types'
 
 const BACKLOG_VALUE = 'backlog'
@@ -51,7 +47,6 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
   const [plannedEndDate, setPlannedEndDate] = useState('')
   const [planningPeriodId, setPlanningPeriodId] = useState<string | null>(null)
   const [assignees, setAssignees] = useState<Assignee[]>([])
-  const [positions, setPositions] = useState<PositionRow[]>([])
   const [files, setFiles] = useState<File[]>([])
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [submitAttempted, setSubmitAttempted] = useState(false)
@@ -69,7 +64,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
     setTitle(''); setCustomer(''); setDescription('')
     setStreet(''); setHouseNumber(''); setZip(''); setCity('')
     setPlannedStartDate(''); setPlannedEndDate(''); setPlanningPeriodId(null)
-    setAssignees([]); setPositions([]); setFiles([])
+    setAssignees([]); setFiles([])
     setTouched({}); setSubmitAttempted(false)
     setError(null); setCreatedOrder(null); setUploadFailed(false)
   }
@@ -98,8 +93,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
         : null,
   }
 
-  const positionsValid = positions.every((row) => isPositionRowEmpty(row) || isPositionRowValid(row))
-  const canSubmit = !Object.values(fieldErrors).some(Boolean) && positionsValid
+  const canSubmit = !Object.values(fieldErrors).some(Boolean)
 
   const handleCreate = async () => {
     setSubmitAttempted(true)
@@ -118,7 +112,6 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
         plannedStartDate,
         plannedEndDate,
         assigneeIds: assignees.map((a) => a.id),
-        positions: toPositionInputs(positions),
         planningPeriodId,
       })
 
@@ -359,17 +352,6 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
                 assignees={assignees}
                 onChange={setAssignees}
                 label="Zuweisung"
-              />
-            </div>
-          )}
-
-          {/* Positionen */}
-          {!attachmentFailureMode && (
-            <div className="border-t pt-3">
-              <OrderPositionsEditor
-                positions={positions}
-                onChange={setPositions}
-                showErrors={submitAttempted}
               />
             </div>
           )}

@@ -48,11 +48,6 @@ export function AssignOrdersDialog({ employee, onClose }: { employee: Employee; 
       plannedStartDate: order.plannedStartDate,
       plannedEndDate: order.plannedEndDate,
       deviationReason: order.deviationReason,
-      positions: order.positions.map((p) => ({
-        description: p.description,
-        quantity: p.quantity,
-        unitPrice: p.unitPrice,
-      })),
     })
   }
 

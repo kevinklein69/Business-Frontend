@@ -31,7 +31,7 @@ import {
 import { PlanningPeriodDialog } from './planning-period-dialog'
 import { ClosePeriodDialog } from './close-period-dialog'
 import { OrderDetailDialog } from './kanban-board'
-import type { Order, OrderPositionInput, OrderStatus, PlanningPeriod, PlanningPeriodStatus } from '@/types'
+import type { Order, OrderStatus, PlanningPeriod, PlanningPeriodStatus } from '@/types'
 
 const UNASSIGNED_ID = 'unassigned'
 
@@ -335,7 +335,7 @@ export function SprintPlanningBoard() {
     description?: string; assigneeIds: string[]
     revenue?: number; invoiceDate?: string; estimatedHours?: number
     plannedStartDate?: string; plannedEndDate?: string
-    deviationReason?: string; positions: OrderPositionInput[]
+    deviationReason?: string
   }) => {
     if (!detailFresh) return
     updateOrder.mutate({ id: detailFresh.id, ...updated })

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import type { Order, OrderAttachment, OrderPositionInput, OrderStatus } from '@/types'
+import type { Order, OrderAttachment, OrderStatus } from '@/types'
 
 export interface UpsertOrderInput {
   title: string
@@ -17,7 +17,6 @@ export interface UpsertOrderInput {
   plannedStartDate?: string | null
   plannedEndDate?: string | null
   deviationReason?: string | null
-  positions: OrderPositionInput[]
   planningPeriodId?: string | null
 }
 

@@ -96,7 +96,6 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
       : plannedStartDate && plannedEndDate < plannedStartDate
         ? 'Das Enddatum darf nicht vor dem Startdatum liegen.'
         : null,
-    assignees: assignees.length > 0 ? null : 'Mindestens ein Mitarbeiter muss zugewiesen werden.',
   }
 
   const positionsValid = positions.every((row) => isPositionRowEmpty(row) || isPositionRowValid(row))
@@ -360,8 +359,6 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
                 assignees={assignees}
                 onChange={setAssignees}
                 label="Zuweisung"
-                required
-                error={showError('assignees') || submitAttempted ? fieldErrors.assignees : null}
               />
             </div>
           )}

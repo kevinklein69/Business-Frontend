@@ -3,11 +3,14 @@
 import { useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { format } from 'date-fns'
-import { useCreateAbsenceRequest, useAbsenceRequests } from '@/hooks/use-absences'
+import {
+  useCreateAbsenceRequest, useAbsenceRequests, useUpdateAbsenceRequest,
+} from '@/hooks/use-absences'
 import { useCompanySettings } from '@/hooks/use-company-settings'
 import { countWorkingDays } from '@/lib/holidays'
 import { de } from 'date-fns/locale'
-import { CalendarDays, CheckCircle2, Clock, XCircle, PalmtreeIcon, Timer } from 'lucide-react'
+import { CalendarDays, CheckCircle2, Clock, XCircle, PalmtreeIcon, Timer, Pencil, Trash2 } from 'lucide-react'
+import { CancelAbsenceRequestDialog } from '@/components/absences/cancel-absence-request-dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
@@ -61,14 +64,21 @@ export default function VacationPage() {
   const { data: allRequests = [], isLoading } = useAbsenceRequests()
   const { data: companySettings } = useCompanySettings()
   const createRequest = useCreateAbsenceRequest()
+  const updateRequest = useUpdateAbsenceRequest()
   const [range,       setRange]       = useState<DateRange | undefined>(undefined)
   const [absenceType, setAbsenceType] = useState<AbsenceType | null>(null)
   const [comment,     setComment]     = useState('')
   const [typeError,   setTypeError]   = useState(false)
+  const [editingId,   setEditingId]   = useState<string | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<AbsenceRequest | null>(null)
 
   const requests = allRequests.filter(
     (a) => a.type === 'Vacation' || a.type === 'FlexTimeCompensation',
   )
+
+  // Anträge, deren Zeitraum noch nicht begonnen hat, können bearbeitet bzw. storniert werden.
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
+  const canModify = (a: AbsenceRequest) => a.startDate >= todayStr
 
   const approvedDays = requests
     .filter((a) => a.status === 'Approved' && a.type === 'Vacation')
@@ -90,22 +100,43 @@ export default function VacationPage() {
       return
     }
     if (!range?.from || !range?.to) return
-    createRequest.mutate(
-      {
-        type:      absenceType,
-        startDate: format(range.from, 'yyyy-MM-dd'),
-        endDate:   format(range.to, 'yyyy-MM-dd'),
-        comment: comment.trim() || undefined,
-      },
-      {
-        onSuccess: () => {
-          setRange(undefined)
-          setAbsenceType(null)
-          setComment('')
-          setTypeError(false)
-        },
-      }
-    )
+
+    const payload = {
+      type:      absenceType,
+      startDate: format(range.from, 'yyyy-MM-dd'),
+      endDate:   format(range.to, 'yyyy-MM-dd'),
+      comment: comment.trim() || undefined,
+    }
+
+    const onSuccess = () => {
+      setRange(undefined)
+      setAbsenceType(null)
+      setComment('')
+      setTypeError(false)
+      setEditingId(null)
+    }
+
+    if (editingId) {
+      updateRequest.mutate({ id: editingId, ...payload }, { onSuccess })
+    } else {
+      createRequest.mutate(payload, { onSuccess })
+    }
+  }
+
+  const handleEdit = (a: AbsenceRequest) => {
+    setEditingId(a.id)
+    setAbsenceType(a.type)
+    setRange({ from: new Date(a.startDate), to: new Date(a.endDate) })
+    setComment(a.comment ?? '')
+    setTypeError(false)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setRange(undefined)
+    setAbsenceType(null)
+    setComment('')
+    setTypeError(false)
   }
 
   return (
@@ -163,7 +194,7 @@ export default function VacationPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <CalendarDays className="size-4" />
-              Antrag stellen
+              {editingId ? 'Antrag bearbeiten' : 'Antrag stellen'}
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -238,13 +269,20 @@ export default function VacationPage() {
               />
             </div>
 
-            <Button
-              onClick={handleSubmit}
-              disabled={!range?.from || !range?.to || createRequest.isPending}
-              className="w-full"
-            >
-              Antrag einreichen
-            </Button>
+            <div className="flex gap-2">
+              {editingId && (
+                <Button variant="outline" onClick={handleCancelEdit} className="flex-1">
+                  Abbrechen
+                </Button>
+              )}
+              <Button
+                onClick={handleSubmit}
+                disabled={!range?.from || !range?.to || createRequest.isPending || updateRequest.isPending}
+                className="flex-1"
+              >
+                {editingId ? 'Aktualisieren' : 'Antrag einreichen'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -265,6 +303,7 @@ export default function VacationPage() {
                   <TableHead>Tage</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Kommentar</TableHead>
+                  <TableHead>Aktionen</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -299,19 +338,43 @@ export default function VacationPage() {
                       <TableCell className="text-muted-foreground">
                         {a.comment ?? '—'}
                       </TableCell>
+                      <TableCell>
+                        {canModify(a) && (
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7"
+                              aria-label="Antrag bearbeiten"
+                              onClick={() => handleEdit(a)}
+                            >
+                              <Pencil className="size-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 text-destructive hover:text-destructive"
+                              aria-label="Antrag stornieren"
+                              onClick={() => setCancelTarget(a)}
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
                     </TableRow>
                   )
                 })}
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
                       Lade Anträge…
                     </TableCell>
                   </TableRow>
                 )}
                 {!isLoading && requests.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
                       Noch keine Anträge gestellt
                     </TableCell>
                   </TableRow>
@@ -322,6 +385,10 @@ export default function VacationPage() {
         </Card>
 
       </div>
+
+      {cancelTarget && (
+        <CancelAbsenceRequestDialog request={cancelTarget} onClose={() => setCancelTarget(null)} />
+      )}
     </div>
   )
 }

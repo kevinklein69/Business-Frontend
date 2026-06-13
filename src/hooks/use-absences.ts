@@ -9,6 +9,13 @@ export interface CreateAbsenceRequestInput {
   comment?: string
 }
 
+export interface UpdateAbsenceRequestInput {
+  type: AbsenceType
+  startDate: string
+  endDate: string
+  comment?: string
+}
+
 export interface RecordAbsenceInput {
   userId: string
   type: AbsenceType
@@ -40,6 +47,29 @@ export function useCreateAbsenceRequest() {
     mutationFn: async (input: CreateAbsenceRequestInput) => {
       const res = await apiClient.post<AbsenceRequest>('/api/absence-requests', input)
       return res.data
+    },
+    onSuccess: () => invalidateAbsences(queryClient),
+  })
+}
+
+/** Bearbeitet einen eigenen Antrag, solange dieser noch nicht begonnen hat. Setzt den Status auf "Offen" zurück. */
+export function useUpdateAbsenceRequest() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...input }: UpdateAbsenceRequestInput & { id: string }) => {
+      const res = await apiClient.put<AbsenceRequest>(`/api/absence-requests/${id}`, input)
+      return res.data
+    },
+    onSuccess: () => invalidateAbsences(queryClient),
+  })
+}
+
+/** Storniert einen eigenen Antrag, solange dieser noch nicht begonnen hat. */
+export function useDeleteAbsenceRequest() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.delete(`/api/absence-requests/${id}`)
     },
     onSuccess: () => invalidateAbsences(queryClient),
   })

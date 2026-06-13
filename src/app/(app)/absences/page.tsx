@@ -7,7 +7,7 @@ import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import {
   CalendarDays, CheckCircle2, ChevronDown, Clock, XCircle,
-  Stethoscope, PalmtreeIcon, BabyIcon, Users, Timer,
+  Stethoscope, PalmtreeIcon, BabyIcon, Users, Timer, Pencil, Trash2,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar } from '@/components/ui/calendar'
@@ -32,6 +32,8 @@ import { useCompanySettings } from '@/hooks/use-company-settings'
 import { countWorkingDays } from '@/lib/holidays'
 import { isManager } from '@/lib/auth'
 import { cn } from '@/lib/utils'
+import { CancelAbsenceRequestDialog } from '@/components/absences/cancel-absence-request-dialog'
+import { EditAbsenceRequestDialog } from '@/components/absences/edit-absence-request-dialog'
 import type { AbsenceRequest, AbsenceType } from '@/types'
 
 const typeLabel: Record<AbsenceType, string> = {
@@ -66,6 +68,9 @@ const statusConfig: Record<AbsenceRequest['status'], {
 
 const recordableTypes: AbsenceType[] = ['Sick', 'ChildSick', 'Vacation']
 
+// Anträge, deren Zeitraum noch nicht begonnen hat, kann der Chef bearbeiten bzw. stornieren.
+const canModify = (a: AbsenceRequest) => a.startDate >= format(new Date(), 'yyyy-MM-dd')
+
 // ---------------------------------------------------------------------------
 // Collapsible table card
 // ---------------------------------------------------------------------------
@@ -81,11 +86,13 @@ interface CollapsibleRequestsCardProps {
   onApprove?: (id: string) => void
   onReject?: (id: string) => void
   actionPending?: boolean
+  onEdit: (request: AbsenceRequest) => void
+  onCancel: (request: AbsenceRequest) => void
 }
 
 function CollapsibleRequestsCard({
   title, count, defaultOpen, isLoading, emptyMessage,
-  rows, showActions, onApprove, onReject, actionPending,
+  rows, showActions, onApprove, onReject, actionPending, onEdit, onCancel,
 }: CollapsibleRequestsCardProps) {
   const [open, setOpen] = useState(defaultOpen)
 
@@ -138,6 +145,7 @@ function CollapsibleRequestsCard({
                   <TableHead>Status</TableHead>
                   <TableHead>Kommentar</TableHead>
                   {showActions && <TableHead className="text-right">Aktion</TableHead>}
+                  <TableHead className="text-right">Verwaltung</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -191,19 +199,43 @@ function CollapsibleRequestsCard({
                           </div>
                         </TableCell>
                       )}
+                      <TableCell className="text-right">
+                        {canModify(a) && (
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7"
+                              aria-label="Antrag bearbeiten"
+                              onClick={() => onEdit(a)}
+                            >
+                              <Pencil className="size-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 text-destructive hover:text-destructive"
+                              aria-label="Antrag stornieren"
+                              onClick={() => onCancel(a)}
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
                     </TableRow>
                   )
                 })}
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={showActions ? 7 : 6} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={showActions ? 8 : 7} className="text-center text-muted-foreground py-10">
                       Lade Fehlzeiten…
                     </TableCell>
                   </TableRow>
                 )}
                 {!isLoading && rows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={showActions ? 7 : 6} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={showActions ? 8 : 7} className="text-center text-muted-foreground py-10">
                       {emptyMessage}
                     </TableCell>
                   </TableRow>
@@ -248,6 +280,8 @@ export default function AbsencesPage() {
   const [range,      setRange]      = useState<DateRange | undefined>(undefined)
   const [comment,    setComment]    = useState('')
   const [employeeTouched, setEmployeeTouched] = useState(false)
+  const [editTarget,   setEditTarget]   = useState<AbsenceRequest | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<AbsenceRequest | null>(null)
 
   const selectedDays =
     range?.from && range?.to && companySettings
@@ -447,6 +481,8 @@ export default function AbsencesPage() {
           onApprove={handleApprove}
           onReject={handleReject}
           actionPending={updateStatus.isPending}
+          onEdit={setEditTarget}
+          onCancel={setCancelTarget}
         />
 
         {/* History — collapsed by default */}
@@ -458,9 +494,18 @@ export default function AbsencesPage() {
           emptyMessage="Noch keine bearbeiteten Anträge"
           rows={historyRequests}
           showActions={false}
+          onEdit={setEditTarget}
+          onCancel={setCancelTarget}
         />
 
       </div>
+
+      {editTarget && (
+        <EditAbsenceRequestDialog request={editTarget} onClose={() => setEditTarget(null)} />
+      )}
+      {cancelTarget && (
+        <CancelAbsenceRequestDialog request={cancelTarget} onClose={() => setCancelTarget(null)} />
+      )}
     </div>
   )
 }

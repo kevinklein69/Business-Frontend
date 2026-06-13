@@ -53,6 +53,16 @@ export function useUpdateOrder() {
   })
 }
 
+export function useDeleteOrder() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.delete(`/api/orders/${id}`)
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orders'] }),
+  })
+}
+
 export function useUploadOrderAttachments() {
   const queryClient = useQueryClient()
   return useMutation({

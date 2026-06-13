@@ -29,6 +29,7 @@ import {
 } from '@/hooks/use-orders'
 import { AcceptanceDialog } from './acceptance-dialog'
 import { AssigneePicker } from './assignee-picker'
+import { DeleteOrderDialog } from './delete-order-dialog'
 import { OrderClockButton } from './order-clock-button'
 import { FileUploadZone, fileIcon, formatFileSize } from './file-upload-zone'
 import {
@@ -104,6 +105,7 @@ export function OrderDetailDialog({
   const [saveAttempted, setSaveAttempted] = useState(false)
   const [newFiles,      setNewFiles]      = useState<File[]>([])
   const [acceptanceOpen, setAcceptanceOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   const uploadAttachments = useUploadOrderAttachments()
   const deleteAttachment  = useDeleteOrderAttachment()
@@ -306,9 +308,8 @@ export function OrderDetailDialog({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="d-actual-hours">Ist-Stunden</Label>
+                <Label>Ist-Stunden</Label>
                 <div
-                  id="d-actual-hours"
                   className="flex h-9 items-center rounded-lg border border-input bg-muted px-2.5 text-sm text-muted-foreground"
                 >
                   {order.actualHours != null ? `${formatMinutes(Math.round(order.actualHours * 60))} h` : '–'}
@@ -457,12 +458,31 @@ export function OrderDetailDialog({
 
 
         <DialogFooter>
+          {isManager && (
+            <Button
+              variant="destructive"
+              className="sm:mr-auto"
+              onClick={() => setDeleteOpen(true)}
+            >
+              <Trash2 className="size-3.5" /> Löschen
+            </Button>
+          )}
           <Button variant="outline" onClick={onClose}>Abbrechen</Button>
           <Button onClick={handleSave}>Speichern</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
     <AcceptanceDialog order={order} open={acceptanceOpen} onClose={() => setAcceptanceOpen(false)} />
+    {deleteOpen && (
+      <DeleteOrderDialog
+        order={order}
+        onClose={() => setDeleteOpen(false)}
+        onDeleted={() => {
+          setDeleteOpen(false)
+          onClose()
+        }}
+      />
+    )}
     </>
   )
 }

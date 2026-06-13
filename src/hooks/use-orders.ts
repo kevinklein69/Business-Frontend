@@ -18,6 +18,7 @@ export interface UpsertOrderInput {
   plannedEndDate?: string | null
   deviationReason?: string | null
   positions: OrderPositionInput[]
+  planningPeriodId?: string | null
 }
 
 export function useOrders() {

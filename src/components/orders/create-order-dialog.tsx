@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { isAxiosError } from 'axios'
-import { Building2, CalendarRange, MapPin, Plus } from 'lucide-react'
+import { Building2, CalendarRange, Layers, MapPin, Plus } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader,
   DialogTitle, DialogTrigger, DialogFooter,
@@ -10,14 +10,24 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 import { useCreateOrder, useUploadOrderAttachments } from '@/hooks/use-orders'
+import { usePlanningPeriods } from '@/hooks/use-planning-periods'
 import { AssigneePicker } from './assignee-picker'
 import { FileUploadZone } from './file-upload-zone'
 import {
   OrderPositionsEditor, isPositionRowEmpty, isPositionRowValid, toPositionInputs,
   type PositionRow,
 } from './order-positions-editor'
-import type { Assignee, Employee, Order } from '@/types'
+import type { Assignee, Employee, Order, PlanningPeriod } from '@/types'
+
+const BACKLOG_VALUE = 'backlog'
+
+function periodOptionLabel(period: PlanningPeriod) {
+  return period.status === 'Active' ? `Aktueller Sprint: ${period.name}` : `${period.name} (Geplant)`
+}
 
 function serverErrorMessage(err: unknown) {
   if (isAxiosError(err) && err.response?.status === 400) {
@@ -39,6 +49,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
   const [description, setDescription] = useState('')
   const [plannedStartDate, setPlannedStartDate] = useState('')
   const [plannedEndDate, setPlannedEndDate] = useState('')
+  const [planningPeriodId, setPlanningPeriodId] = useState<string | null>(null)
   const [assignees, setAssignees] = useState<Assignee[]>([])
   const [positions, setPositions] = useState<PositionRow[]>([])
   const [files, setFiles] = useState<File[]>([])
@@ -50,12 +61,14 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
 
   const createOrder = useCreateOrder()
   const uploadAttachments = useUploadOrderAttachments()
+  const { data: periods = [] } = usePlanningPeriods()
+  const openPeriods = periods.filter((p) => p.status !== 'Closed')
   const isPending = createOrder.isPending || uploadAttachments.isPending
 
   const reset = () => {
     setTitle(''); setCustomer(''); setDescription('')
     setStreet(''); setHouseNumber(''); setZip(''); setCity('')
-    setPlannedStartDate(''); setPlannedEndDate('')
+    setPlannedStartDate(''); setPlannedEndDate(''); setPlanningPeriodId(null)
     setAssignees([]); setPositions([]); setFiles([])
     setTouched({}); setSubmitAttempted(false)
     setError(null); setCreatedOrder(null); setUploadFailed(false)
@@ -107,6 +120,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
         plannedEndDate,
         assigneeIds: assignees.map((a) => a.id),
         positions: toPositionInputs(positions),
+        planningPeriodId,
       })
 
       if (files.length > 0) {
@@ -163,6 +177,32 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
             {showError('title') && fieldErrors.title && (
               <p className="text-sm text-destructive">{fieldErrors.title}</p>
             )}
+          </div>
+
+          {/* Zielbereich */}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="n-target" className="flex items-center gap-1.5">
+              <Layers className="size-3.5" /> Wohin soll der Auftrag?
+            </Label>
+            <Select
+              value={planningPeriodId ?? BACKLOG_VALUE}
+              onValueChange={(v) => setPlanningPeriodId(v === BACKLOG_VALUE ? null : v)}
+            >
+              <SelectTrigger id="n-target" disabled={attachmentFailureMode} className="w-full">
+                <SelectValue>
+                  {(v: string | null) => {
+                    const period = v ? openPeriods.find((p) => p.id === v) : null
+                    return period ? periodOptionLabel(period) : 'Backlog (Planung)'
+                  }}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={BACKLOG_VALUE}>Backlog (Planung)</SelectItem>
+                {openPeriods.map((period) => (
+                  <SelectItem key={period.id} value={period.id}>{periodOptionLabel(period)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Kunde */}

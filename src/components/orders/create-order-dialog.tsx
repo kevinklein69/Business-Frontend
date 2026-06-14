@@ -22,7 +22,7 @@ import type { Assignee, Employee, Order, PlanningPeriod } from '@/types'
 const BACKLOG_VALUE = 'backlog'
 
 function periodOptionLabel(period: PlanningPeriod) {
-  return period.status === 'Active' ? `Aktueller Sprint: ${period.name}` : `${period.name} (Geplant)`
+  return period.status === 'Active' ? `Aktive Aufträge: ${period.name}` : `${period.name} (Geplant)`
 }
 
 function serverErrorMessage(err: unknown) {
@@ -184,12 +184,12 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
                 <SelectValue>
                   {(v: string | null) => {
                     const period = v ? openPeriods.find((p) => p.id === v) : null
-                    return period ? periodOptionLabel(period) : 'Backlog (Planung)'
+                    return period ? periodOptionLabel(period) : 'Planung'
                   }}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={BACKLOG_VALUE}>Backlog (Planung)</SelectItem>
+                <SelectItem value={BACKLOG_VALUE}>Planung</SelectItem>
                 {openPeriods.map((period) => (
                   <SelectItem key={period.id} value={period.id}>{periodOptionLabel(period)}</SelectItem>
                 ))}

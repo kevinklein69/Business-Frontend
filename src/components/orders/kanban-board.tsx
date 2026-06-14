@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Building2, CalendarRange, Clock, Download, Euro, AlertTriangle, FileSignature, MapPin, Paperclip, Trash2, Upload } from 'lucide-react'
+import { Building2, CalendarRange, Clock, Download, Euro, AlertTriangle, FileSignature, MapPin, Paperclip, Trash2, Upload, User } from 'lucide-react'
 import { format } from 'date-fns'
 import {
   DndContext, DragOverlay, PointerSensor,
@@ -339,11 +339,28 @@ export function OrderDetailDialog({
 
           {/* Mitarbeiter */}
           <div className="border-t pt-3">
-            <AssigneePicker
-              employees={employees}
-              assignees={assignees}
-              onChange={setAssignees}
-            />
+            {isManager ? (
+              <AssigneePicker
+                employees={employees}
+                assignees={assignees}
+                onChange={setAssignees}
+              />
+            ) : (
+              <div className="flex flex-col gap-2">
+                <Label className="flex items-center gap-1.5">
+                  <User className="size-3.5" /> Mitarbeiter
+                </Label>
+                {assignees.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Keine Mitarbeiter zugewiesen</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {assignees.map((a) => (
+                      <Badge key={a.id} variant="secondary">{a.name}</Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Abrechnung */}

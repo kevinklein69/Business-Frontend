@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select'
 import { useCreateOrder, useUploadOrderAttachments } from '@/hooks/use-orders'
 import { usePlanningPeriods } from '@/hooks/use-planning-periods'
+import { useIsManager } from '@/lib/auth'
 import { AssigneePicker } from './assignee-picker'
 import { FileUploadZone } from './file-upload-zone'
 import type { Assignee, Employee, Order, PlanningPeriod } from '@/types'
@@ -54,6 +55,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null)
   const [uploadFailed, setUploadFailed] = useState(false)
 
+  const isManager = useIsManager()
   const createOrder = useCreateOrder()
   const uploadAttachments = useUploadOrderAttachments()
   const { data: periods = [] } = usePlanningPeriods()
@@ -345,7 +347,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
           </div>
 
           {/* Zuweisung */}
-          {!attachmentFailureMode && (
+          {!attachmentFailureMode && isManager && (
             <div className="border-t pt-3">
               <AssigneePicker
                 employees={employees}

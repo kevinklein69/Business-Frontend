@@ -131,13 +131,13 @@ export function CreateEmployeeDialog() {
       <DialogTrigger render={<Button />}>
         <Plus className="size-4" /> Neuer Mitarbeiter
       </DialogTrigger>
-      <DialogContent className="max-w-2xl sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Neuen Mitarbeiter anlegen</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-1 max-h-[70vh] overflow-y-auto pr-1">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="e-firstName">Vorname *</Label>
               <Input
@@ -218,8 +218,8 @@ export function CreateEmployeeDialog() {
           {/* Adresse */}
           <div className="flex flex-col gap-3 border-t pt-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Adresse</p>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="flex flex-col gap-1.5 col-span-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <Label htmlFor="e-street">Straße *</Label>
                 <Input
                   id="e-street"
@@ -250,7 +250,7 @@ export function CreateEmployeeDialog() {
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="e-zip">PLZ *</Label>
                 <Input
@@ -267,7 +267,7 @@ export function CreateEmployeeDialog() {
                   <p className="text-sm text-destructive">{fieldErrors.zip}</p>
                 )}
               </div>
-              <div className="flex flex-col gap-1.5 col-span-2">
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <Label htmlFor="e-city">Ort *</Label>
                 <Input
                   id="e-city"
@@ -288,7 +288,7 @@ export function CreateEmployeeDialog() {
           {/* Vertragsdaten */}
           <div className="flex flex-col gap-3 border-t pt-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Vertragsdaten</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="e-entryDate">Eintrittsdatum *</Label>
                 <Input
@@ -309,7 +309,7 @@ export function CreateEmployeeDialog() {
                 <Input id="e-probationMonths" type="number" min={0} value={form.probationMonths} onChange={updateField('probationMonths')} placeholder="z.B. 6" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="e-probationEndDate">Probezeitende</Label>
                 <Input
@@ -341,7 +341,7 @@ export function CreateEmployeeDialog() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="e-role">Rolle</Label>
               <Select value={role} onValueChange={(v) => setRole(v as Role)}>

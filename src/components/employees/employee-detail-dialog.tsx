@@ -36,7 +36,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <div className="flex flex-col gap-3 border-t pt-3 first:border-t-0 first:pt-0">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{title}</p>
-      <div className="grid grid-cols-2 gap-3">{children}</div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>
     </div>
   )
 }

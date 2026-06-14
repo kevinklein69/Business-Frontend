@@ -112,7 +112,7 @@ export function FileUploadZone({
                 className="flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm"
               >
                 <Icon className="size-3.5 shrink-0 text-muted-foreground" />
-                <span className="truncate">{file.name}</span>
+                <span className="truncate min-w-0">{file.name}</span>
                 <span className="ml-auto shrink-0 text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
                 <Button
                   variant="ghost"

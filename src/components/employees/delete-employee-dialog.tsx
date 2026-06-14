@@ -29,7 +29,7 @@ export function DeleteEmployeeDialog({ employee, onClose }: { employee: Employee
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Mitarbeiter löschen</DialogTitle>
           <DialogDescription>

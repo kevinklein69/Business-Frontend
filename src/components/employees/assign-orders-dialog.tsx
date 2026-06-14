@@ -53,7 +53,7 @@ export function AssignOrdersDialog({ employee, onClose }: { employee: Employee; 
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Aufträge für {name}</DialogTitle>
         </DialogHeader>
@@ -82,7 +82,7 @@ export function AssignOrdersDialog({ employee, onClose }: { employee: Employee; 
                   {assigned ? <Check className="size-3.5" /> : <ClipboardList className="size-3.5" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="truncate">{order.title}</p>
+                  <p className="truncate min-w-0">{order.title}</p>
                   {order.customer && <p className="text-xs text-muted-foreground truncate">{order.customer}</p>}
                 </div>
                 <Badge variant="secondary" className="shrink-0">{statusLabel[order.status]}</Badge>

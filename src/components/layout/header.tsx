@@ -1,7 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { LogOut } from 'lucide-react'
+import { LogOut, Menu } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
+import { MobileSidebar } from '@/components/layout/sidebar'
 import { removeToken, useUserName } from '@/lib/auth'
 
 const pageTitles: Record<string, string> = {
@@ -42,6 +44,7 @@ export function Header() {
   const router  = useRouter()
   const title   = usePageTitle()
   const userName = useUserName()
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   const handleLogout = () => {
     removeToken()
@@ -49,8 +52,21 @@ export function Header() {
   }
 
   return (
-    <header className="h-14 border-b flex items-center justify-between px-6 bg-card shrink-0 shadow-[0_1px_6px_rgba(13,27,42,0.06)]">
-      <h2 className="text-base font-semibold tracking-tight text-foreground">{title}</h2>
+    <header className="h-14 border-b flex items-center justify-between gap-2 px-4 sm:px-6 bg-card shrink-0 shadow-[0_1px_6px_rgba(13,27,42,0.06)]">
+      <div className="flex items-center gap-2 min-w-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="-ml-1 lg:hidden shrink-0"
+          onClick={() => setMobileNavOpen(true)}
+        >
+          <Menu className="size-5" />
+          <span className="sr-only">Menü öffnen</span>
+        </Button>
+        <h2 className="text-base font-semibold tracking-tight text-foreground truncate">{title}</h2>
+      </div>
+
+      <MobileSidebar open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
 
       <DropdownMenu>
         <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-full" />}>

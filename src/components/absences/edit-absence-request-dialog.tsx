@@ -59,7 +59,7 @@ export function EditAbsenceRequestDialog({ request, onClose }: { request: Absenc
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Antrag bearbeiten</DialogTitle>
           <DialogDescription>

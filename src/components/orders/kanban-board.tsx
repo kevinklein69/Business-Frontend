@@ -147,7 +147,7 @@ export function OrderDetailDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Auftrag bearbeiten</DialogTitle>
         </DialogHeader>
@@ -190,8 +190,8 @@ export function OrderDetailDialog({
           </div>
 
           {/* Adresse */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-2 flex flex-col gap-1.5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="sm:col-span-2 flex flex-col gap-1.5">
               <Label htmlFor="d-street" className="flex items-center gap-1.5">
                 <MapPin className="size-3.5" /> Straße *
               </Label>
@@ -218,7 +218,7 @@ export function OrderDetailDialog({
               />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="d-zip">PLZ *</Label>
               <Input
@@ -231,7 +231,7 @@ export function OrderDetailDialog({
                 disabled={!isManager}
               />
             </div>
-            <div className="col-span-2 flex flex-col gap-1.5">
+            <div className="sm:col-span-2 flex flex-col gap-1.5">
               <Label htmlFor="d-city">Ort *</Label>
               <Input
                 id="d-city"
@@ -267,7 +267,7 @@ export function OrderDetailDialog({
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
               <CalendarRange className="size-3.5" /> Zeitplanung
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="d-planned-start">Geplanter Start</Label>
                 <Input
@@ -289,7 +289,7 @@ export function OrderDetailDialog({
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="d-estimated-hours">Soll-Stunden</Label>
                 <Input
@@ -378,7 +378,7 @@ export function OrderDetailDialog({
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                 <Euro className="size-3.5" /> Abrechnung
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="d-revenue">Umsatz (€)</Label>
                   <Input
@@ -419,7 +419,7 @@ export function OrderDetailDialog({
                       className="flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm"
                     >
                       <Icon className="size-3.5 shrink-0 text-muted-foreground" />
-                      <span className="truncate">{attachment.fileName}</span>
+                      <span className="truncate min-w-0">{attachment.fileName}</span>
                       <span className="ml-auto shrink-0 text-xs text-muted-foreground">
                         {formatFileSize(attachment.sizeBytes)}
                       </span>
@@ -628,7 +628,7 @@ function KanbanColumn({
   const { isOver, setNodeRef } = useDroppable({ id: col.key })
 
   return (
-    <div className="flex flex-col gap-2 flex-1 min-w-40">
+    <div className="flex flex-col gap-2 w-full landscape:flex-1 landscape:min-w-44">
       <div className="flex items-center justify-between px-1">
         <span className="text-sm font-medium">{col.label}</span>
         <Badge variant={col.badgeVariant}>{items.length}</Badge>
@@ -636,7 +636,7 @@ function KanbanColumn({
       <div
         ref={setNodeRef}
         className={cn(
-          'flex flex-col gap-2 min-h-32 rounded-xl p-2 transition-colors duration-150 ring-1',
+          'flex flex-col gap-2 landscape:min-h-32 rounded-xl p-2 transition-colors duration-150 ring-1',
           isOver ? 'bg-primary/10 ring-primary/30' : 'bg-muted ring-border'
         )}
       >
@@ -703,7 +703,7 @@ export function KanbanBoard({ periodId }: { periodId: string | null }) {
   return (
     <>
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-2 w-full min-w-0">
+        <div className="flex flex-col gap-4 w-full min-w-0 landscape:flex-row landscape:overflow-x-auto landscape:pb-2">
           {COLUMNS.map((col) => (
             <KanbanColumn
               key={col.key}

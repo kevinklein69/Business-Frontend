@@ -30,7 +30,7 @@ export function EmployeeTimeTrackingSection({ employeeId }: { employeeId: string
   return (
     <div className="flex flex-col gap-3">
       {/* Balance summary */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="flex flex-col gap-0.5">
           <p className="text-xs text-muted-foreground">Diese Woche</p>
           <p className="text-sm font-medium tabular-nums">

@@ -124,13 +124,13 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Mitarbeiter bearbeiten</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-1 max-h-[70vh] overflow-y-auto pr-1">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="ee-firstName">Vorname *</Label>
               <Input
@@ -210,8 +210,8 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
           {/* Adresse */}
           <div className="flex flex-col gap-3 border-t pt-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Adresse</p>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="flex flex-col gap-1.5 col-span-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <Label htmlFor="ee-street">Straße *</Label>
                 <Input
                   id="ee-street"
@@ -242,7 +242,7 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="ee-zip">PLZ *</Label>
                 <Input
@@ -259,7 +259,7 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
                   <p className="text-sm text-destructive">{fieldErrors.zip}</p>
                 )}
               </div>
-              <div className="flex flex-col gap-1.5 col-span-2">
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <Label htmlFor="ee-city">Ort *</Label>
                 <Input
                   id="ee-city"
@@ -280,7 +280,7 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
           {/* Vertragsdaten */}
           <div className="flex flex-col gap-3 border-t pt-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Vertragsdaten</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="ee-entryDate">Eintrittsdatum *</Label>
                 <Input
@@ -301,7 +301,7 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
                 <Input id="ee-probationMonths" type="number" min={0} value={form.probationMonths} onChange={updateField('probationMonths')} placeholder="z.B. 6" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="ee-probationEndDate">Probezeitende</Label>
                 <Input
@@ -333,7 +333,7 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="ee-role">Rolle</Label>
               <Select value={role} onValueChange={(v) => setRole(v as Role)}>

@@ -15,6 +15,12 @@ import {
 import { cn } from '@/lib/utils'
 import { useIsManager } from '@/lib/auth'
 import { Logo } from '@/components/brand/logo'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 
 const navItems = [
   { href: '/dashboard',    label: 'Dashboard',    icon: LayoutDashboard },
@@ -29,7 +35,7 @@ const statisticsItem = { href: '/statistics', label: 'Statistik', icon: BarChart
 
 const settingsItem = { href: '/settings', label: 'Einstellungen', icon: Settings }
 
-export function Sidebar() {
+function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
   const showManagerNav = useIsManager()
 
@@ -40,12 +46,7 @@ export function Sidebar() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 
   return (
-    <aside className="w-56 shrink-0 flex flex-col border-r bg-sidebar text-sidebar-foreground h-full">
-      {/* Logo / brand */}
-      <div className="flex items-center h-14 px-4 border-b border-sidebar-border">
-        <Logo onDark markClassName="size-7" textClassName="text-base" />
-      </div>
-
+    <>
       {/* Main nav */}
       <nav className="flex-1 overflow-y-auto py-3">
         <p className="px-4 pb-1.5 text-[0.55rem] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
@@ -58,6 +59,7 @@ export function Sidebar() {
               <li key={href}>
                 <Link
                   href={href}
+                  onClick={onNavigate}
                   className={cn(
                     'relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors',
                     active
@@ -81,6 +83,7 @@ export function Sidebar() {
       <div className="border-t border-sidebar-border px-2 py-3">
         <Link
           href={settingsItem.href}
+          onClick={onNavigate}
           className={cn(
             'relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors',
             isActive(settingsItem.href)
@@ -95,6 +98,36 @@ export function Sidebar() {
           {settingsItem.label}
         </Link>
       </div>
+    </>
+  )
+}
+
+/** Fixed sidebar shown on desktop (lg and up). */
+export function Sidebar() {
+  return (
+    <aside className="hidden lg:flex w-56 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground h-full">
+      <div className="flex items-center h-14 px-4 border-b border-sidebar-border">
+        <Logo onDark markClassName="size-7" textClassName="text-base" />
+      </div>
+      <SidebarNav />
     </aside>
+  )
+}
+
+/** Slide-in drawer sidebar for mobile/tablet, triggered from the header. */
+export function MobileSidebar({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="left"
+        className="w-72 max-w-[80vw] gap-0 bg-sidebar text-sidebar-foreground p-0 [&>button]:text-sidebar-foreground [&>button]:hover:bg-sidebar-accent"
+      >
+        <SheetHeader className="h-14 flex-row items-center border-b border-sidebar-border px-4 py-0">
+          <SheetTitle className="sr-only">Navigation</SheetTitle>
+          <Logo onDark markClassName="size-7" textClassName="text-base" />
+        </SheetHeader>
+        <SidebarNav onNavigate={() => onOpenChange(false)} />
+      </SheetContent>
+    </Sheet>
   )
 }

@@ -48,13 +48,13 @@ export default function TimeTrackingPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Zeiterfassung</h1>
         <CreateManualEntryDialog />
       </div>
 
       {/* Stempel widget + stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[auto_1fr_1fr_1fr]">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[auto_1fr_1fr_1fr]">
         {/* Stamp-in card */}
         <Card className="flex items-center justify-center px-6 py-5 border-l-[4px] border-l-ring">
           <ClockButton />
@@ -190,9 +190,9 @@ export default function TimeTrackingPage() {
                 <TableHead>Datum</TableHead>
                 <TableHead>Von</TableHead>
                 <TableHead>Bis</TableHead>
-                <TableHead>Pause</TableHead>
+                <TableHead className="hidden sm:table-cell">Pause</TableHead>
                 <TableHead>Netto</TableHead>
-                <TableHead>Differenz</TableHead>
+                <TableHead className="hidden sm:table-cell">Differenz</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Aktion</TableHead>
               </TableRow>

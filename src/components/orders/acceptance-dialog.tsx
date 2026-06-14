@@ -71,7 +71,7 @@ export function AcceptanceDialog({ order, open, onClose }: { order: Order; open:
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Kundenabnahme durchführen</DialogTitle>
         </DialogHeader>

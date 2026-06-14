@@ -53,7 +53,7 @@ export function ClosePeriodDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && !close.isPending && onClose()}>
-      <DialogContent className="max-w-md sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>„{period.name}&ldquo; abschließen</DialogTitle>
         </DialogHeader>

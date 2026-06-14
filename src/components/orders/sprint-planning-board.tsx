@@ -97,9 +97,9 @@ function PlanningOrderCard({ order, overlay = false, onOpen }: {
           overlay ? 'cursor-grabbing' : 'cursor-pointer hover:shadow-sm hover:ring-2 hover:ring-primary/20 active:cursor-grabbing'
         )}
       >
-        <span className="font-medium truncate">{order.title}</span>
+        <span className="font-medium truncate min-w-0">{order.title}</span>
         {order.customer && (
-          <span className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground truncate">
+          <span className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground truncate min-w-0">
             <Building2 className="size-3 shrink-0" />
             {order.customer}
           </span>

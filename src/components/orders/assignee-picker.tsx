@@ -84,7 +84,7 @@ export function AssigneePicker({
               )}>
                 {selected ? <Check className="size-3" /> : initials(name).slice(0,2)}
               </div>
-              <span className="truncate">{name}</span>
+              <span className="truncate min-w-0">{name}</span>
             </button>
           )
         })}

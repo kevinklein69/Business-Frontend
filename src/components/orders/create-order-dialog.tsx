@@ -151,7 +151,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
       <DialogTrigger render={<Button />}>
         <Plus className="size-4" /> Neuer Auftrag
       </DialogTrigger>
-      <DialogContent className="max-w-2xl sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Neuen Auftrag erstellen</DialogTitle></DialogHeader>
 
         <div className="flex flex-col gap-4 py-1">
@@ -220,8 +220,8 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
           </div>
 
           {/* Adresse */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-2 flex flex-col gap-1.5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="sm:col-span-2 flex flex-col gap-1.5">
               <Label htmlFor="n-street" className="flex items-center gap-1.5">
                 <MapPin className="size-3.5" /> Straße *
               </Label>
@@ -256,7 +256,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
               )}
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="n-zip">PLZ *</Label>
               <Input
@@ -273,7 +273,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
                 <p className="text-sm text-destructive">{fieldErrors.zip}</p>
               )}
             </div>
-            <div className="col-span-2 flex flex-col gap-1.5">
+            <div className="sm:col-span-2 flex flex-col gap-1.5">
               <Label htmlFor="n-city">Ort *</Label>
               <Input
                 id="n-city"
@@ -310,7 +310,7 @@ export function CreateOrderDialog({ employees }: { employees: Employee[] }) {
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
               <CalendarRange className="size-3.5" /> Ausführungszeitraum
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="n-planned-start">Geplanter Start *</Label>
                 <Input

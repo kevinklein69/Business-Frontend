@@ -17,7 +17,7 @@ export function CancelAbsenceRequestDialog({ request, onClose }: { request: Abse
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Antrag stornieren</DialogTitle>
           <DialogDescription>

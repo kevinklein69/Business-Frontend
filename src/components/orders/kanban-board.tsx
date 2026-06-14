@@ -364,34 +364,36 @@ export function OrderDetailDialog({
           </div>
 
           {/* Abrechnung */}
-          <div className="flex flex-col gap-3 border-t pt-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-              <Euro className="size-3.5" /> Abrechnung
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="d-revenue">Umsatz (€)</Label>
-                <Input
-                  id="d-revenue"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="z.B. 1500"
-                  value={revenue}
-                  onChange={(e) => setRevenue(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="d-invoice-date">Rechnungsdatum</Label>
-                <Input
-                  id="d-invoice-date"
-                  type="date"
-                  value={invoiceDate}
-                  onChange={(e) => setInvoiceDate(e.target.value)}
-                />
+          {isManager && (
+            <div className="flex flex-col gap-3 border-t pt-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                <Euro className="size-3.5" /> Abrechnung
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="d-revenue">Umsatz (€)</Label>
+                  <Input
+                    id="d-revenue"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="z.B. 1500"
+                    value={revenue}
+                    onChange={(e) => setRevenue(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="d-invoice-date">Rechnungsdatum</Label>
+                  <Input
+                    id="d-invoice-date"
+                    type="date"
+                    value={invoiceDate}
+                    onChange={(e) => setInvoiceDate(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Anhänge */}
           <div className="flex flex-col gap-2 border-t pt-3">
@@ -496,6 +498,7 @@ function KanbanCard({
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: order.id })
   const { data: clockStatus } = useOrderClockStatus(order.id)
   const isClockedIn = !!clockStatus?.isClockedIn
+  const isManager = useIsManager()
 
   const hasDeviation =
     order.status === 'Done' &&
@@ -527,7 +530,7 @@ function KanbanCard({
         </CardHeader>
 
         {(order.customer || hasAddress || order.description || order.assignees.length > 0
-          || order.revenue != null || hasPlannedRange || hasDeviation || isClockedIn) && (
+          || (isManager && order.revenue != null) || hasPlannedRange || hasDeviation || isClockedIn) && (
           <CardContent className="flex flex-col gap-2">
             {order.customer && (
               <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -544,7 +547,7 @@ function KanbanCard({
             {order.description && (
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
             )}
-            {(order.revenue != null || hasPlannedRange || hasDeviation || isClockedIn) && (
+            {((isManager && order.revenue != null) || hasPlannedRange || hasDeviation || isClockedIn) && (
               <div className="flex items-center gap-1.5 flex-wrap">
                 {isClockedIn && (
                   <Badge variant="outline" className="gap-1 text-xs font-normal border-success text-success bg-success/10">
@@ -552,7 +555,7 @@ function KanbanCard({
                     Eingestempelt
                   </Badge>
                 )}
-                {order.revenue != null && (
+                {isManager && order.revenue != null && (
                   <Badge variant="outline" className="gap-1 text-xs font-normal">
                     <Euro className="size-3" />
                     {currencyFormatter.format(order.revenue)}

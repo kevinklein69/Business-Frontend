@@ -16,7 +16,7 @@ export function OrdersView() {
   const { data: periods = [] } = usePlanningPeriods()
   const activePeriod = periods.find((p) => p.status === 'Active') ?? null
 
-  const [view, setView] = useState<View>('planning')
+  const [view, setView] = useState<View>('sprint')
 
   return (
     <div className="flex flex-col gap-4">

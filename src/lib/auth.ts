@@ -13,6 +13,7 @@ export const isLoggedIn = () => !!getToken()
 
 const ROLE_CLAIM = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
 const NAMEID_CLAIM = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
+const NAME_CLAIM = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'
 
 /** Decodes the JWT payload from localStorage (no signature check — purely for UI gating). */
 const getClaims = (): Record<string, unknown> | null => {
@@ -41,6 +42,13 @@ export const getUserId = (): string | null => {
   return typeof id === 'string' ? id : null
 }
 
+/** The current user's full name ("Vorname Nachname"). */
+export const getUserName = (): string | null => {
+  const claims = getClaims()
+  const name = claims?.[NAME_CLAIM] ?? claims?.name
+  return typeof name === 'string' ? name : null
+}
+
 export const isManager = () => {
   const role = getRole()
   return role === 'Admin' || role === 'Manager'
@@ -61,6 +69,9 @@ export const useIsAdmin = () =>
 
 export const useUserId = () =>
   React.useSyncExternalStore(noopSubscribe, getUserId, () => null)
+
+export const useUserName = () =>
+  React.useSyncExternalStore(noopSubscribe, getUserName, () => null)
 
 /** SSR-safe read of the login state, mirroring useIsManager — see its comment for why. */
 export const useIsLoggedIn = () =>

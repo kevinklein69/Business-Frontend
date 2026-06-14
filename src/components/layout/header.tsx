@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { removeToken } from '@/lib/auth'
+import { removeToken, useUserName } from '@/lib/auth'
 
 const pageTitles: Record<string, string> = {
   '/dashboard':    'Dashboard',
@@ -34,9 +34,14 @@ function usePageTitle(): string {
   return 'Betrieb-App'
 }
 
+function initials(name: string) {
+  return name.split(' ').filter(Boolean).map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+}
+
 export function Header() {
   const router  = useRouter()
   const title   = usePageTitle()
+  const userName = useUserName()
 
   const handleLogout = () => {
     removeToken()
@@ -51,13 +56,13 @@ export function Header() {
         <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-full" />}>
           <Avatar>
             <AvatarFallback className="bg-ring text-primary-foreground text-xs font-bold">
-              KK
+              {userName ? initials(userName) : ''}
             </AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuGroup>
-            <DropdownMenuLabel>Mein Konto</DropdownMenuLabel>
+            <DropdownMenuLabel>{userName ?? 'Mein Konto'}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={handleLogout}>
               <LogOut />

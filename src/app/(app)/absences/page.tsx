@@ -66,7 +66,7 @@ const statusConfig: Record<AbsenceRequest['status'], {
   Rejected: { variant: 'destructive', icon: <XCircle className="size-4" /> },
 }
 
-const recordableTypes: AbsenceType[] = ['Sick', 'ChildSick', 'Vacation']
+const recordableTypes: AbsenceType[] = ['Sick', 'ChildSick', 'Vacation', 'FlexTimeCompensation']
 
 // Anträge, deren Zeitraum noch nicht begonnen hat, kann der Chef bearbeiten bzw. stornieren.
 const canModify = (a: AbsenceRequest) => a.startDate >= format(new Date(), 'yyyy-MM-dd')

@@ -35,7 +35,7 @@ export function Sidebar() {
 
   const items = showManagerNav
     ? [...navItems, absencesItem, employeesItem, statisticsItem]
-    : [...navItems, employeesItem]
+    : [...navItems]
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 

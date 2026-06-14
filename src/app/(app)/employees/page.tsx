@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Search, Users, ClipboardList, CheckCircle2, Pencil, Trash2, Eye } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -9,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { useEmployees } from '@/hooks/use-employees'
-import { useIsAdmin, useIsManager } from '@/lib/auth'
+import { isManager, useIsAdmin, useIsManager } from '@/lib/auth'
 import { AssignOrdersDialog } from '@/components/employees/assign-orders-dialog'
 import { CreateEmployeeDialog } from '@/components/employees/create-employee-dialog'
 import { EditEmployeeDialog } from '@/components/employees/edit-employee-dialog'
@@ -40,6 +41,16 @@ const cardThemes = [
 ]
 
 export default function EmployeesPage() {
+  const router = useRouter()
+
+  // Client-side gate — the API enforces the real authorization (Admin/Manager only).
+  // Read the role directly (not via the SSR-safe useIsManager hook): on the very first
+  // client render that hook still reports the hydration-safe `false`, which would redirect
+  // legitimate managers away before the corrected value lands.
+  useEffect(() => {
+    if (!isManager()) router.replace('/dashboard')
+  }, [router])
+
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterKey>('Alle')
   const [assigningEmployee, setAssigningEmployee] = useState<Employee | null>(null)
@@ -47,7 +58,7 @@ export default function EmployeesPage() {
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null)
   const [viewingEmployeeId, setViewingEmployeeId] = useState<string | null>(null)
 
-  const isManager = useIsManager()
+  const isManagerUser = useIsManager()
   const isAdmin = useIsAdmin()
   const { data: employees, isLoading, isError } = useEmployees()
   const list = employees ?? []
@@ -172,7 +183,7 @@ export default function EmployeesPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="mt-7 flex items-center gap-2">
-                      {isManager && (
+                      {isManagerUser && (
                         <button
                           type="button"
                           onClick={() => setViewingEmployeeId(m.id)}
@@ -224,7 +235,7 @@ export default function EmployeesPage() {
                     ) : (
                       <p className="text-xs font-semibold text-success uppercase tracking-wide">Verfügbar</p>
                     )}
-                    {isManager && (
+                    {isManagerUser && (
                       <Button size="xs" variant="outline" onClick={() => setAssigningEmployee(m)}>
                         <ClipboardList className="size-3" /> Zuweisen
                       </Button>

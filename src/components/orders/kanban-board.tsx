@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { formatMinutes } from '@/lib/format'
-import { useIsManager } from '@/lib/auth'
+import { useIsManager, useUserId } from '@/lib/auth'
 import { useEmployees } from '@/hooks/use-employees'
 import { useOrderClockStatus, useOrderTimeBreakdown } from '@/hooks/use-time-tracking'
 import {
@@ -172,7 +172,7 @@ export function OrderDetailDialog({
           {/* Titel */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="d-title">Titel</Label>
-            <Input id="d-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input id="d-title" value={title} onChange={(e) => setTitle(e.target.value)} disabled={!isManager} />
           </div>
 
           {/* Kunde */}
@@ -185,6 +185,7 @@ export function OrderDetailDialog({
               value={customer}
               onChange={(e) => setCustomer(e.target.value)}
               placeholder="Kundenname"
+              disabled={!isManager}
             />
           </div>
 
@@ -201,6 +202,7 @@ export function OrderDetailDialog({
                 placeholder="Straße"
                 required
                 aria-invalid={saveAttempted && !street.trim()}
+                disabled={!isManager}
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -212,6 +214,7 @@ export function OrderDetailDialog({
                 placeholder="Nr."
                 required
                 aria-invalid={saveAttempted && !houseNumber.trim()}
+                disabled={!isManager}
               />
             </div>
           </div>
@@ -225,6 +228,7 @@ export function OrderDetailDialog({
                 placeholder="PLZ"
                 required
                 aria-invalid={saveAttempted && !zip.trim()}
+                disabled={!isManager}
               />
             </div>
             <div className="col-span-2 flex flex-col gap-1.5">
@@ -236,6 +240,7 @@ export function OrderDetailDialog({
                 placeholder="Ort"
                 required
                 aria-invalid={saveAttempted && !city.trim()}
+                disabled={!isManager}
               />
             </div>
           </div>
@@ -252,7 +257,8 @@ export function OrderDetailDialog({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Auftragsdetails…"
               rows={3}
-              className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base resize-none outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 placeholder:text-muted-foreground"
+              disabled={!isManager}
+              className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base resize-none outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 dark:disabled:bg-input/80"
             />
           </div>
 
@@ -269,6 +275,7 @@ export function OrderDetailDialog({
                   type="date"
                   value={plannedStartDate}
                   onChange={(e) => setPlannedStartDate(e.target.value)}
+                  disabled={!isManager}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -278,6 +285,7 @@ export function OrderDetailDialog({
                   type="date"
                   value={plannedEndDate}
                   onChange={(e) => setPlannedEndDate(e.target.value)}
+                  disabled={!isManager}
                 />
               </div>
             </div>
@@ -292,12 +300,13 @@ export function OrderDetailDialog({
                   placeholder="z.B. 8"
                   value={estimatedHours}
                   onChange={(e) => setEstimatedHours(e.target.value)}
+                  disabled={!isManager}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>Ist-Stunden</Label>
                 <div
-                  className="flex h-9 items-center rounded-lg border border-input bg-muted px-2.5 text-sm text-muted-foreground"
+                  className="flex h-8 items-center rounded-lg border border-input bg-input/50 px-2.5 text-base text-muted-foreground opacity-50 md:text-sm dark:bg-input/80"
                 >
                   {order.actualHours != null ? `${formatMinutes(Math.round(order.actualHours * 60))} h` : '–'}
                 </div>
@@ -645,8 +654,15 @@ function KanbanColumn({
 // ── Board ─────────────────────────────────────────────────────────────────────
 
 export function KanbanBoard({ periodId }: { periodId: string | null }) {
-  const { data: orders = [] }    = useOrders()
+  const { data: allOrders = [] } = useOrders()
   const { data: employees = [] } = useEmployees()
+  const isManager = useIsManager()
+  const userId    = useUserId()
+
+  // Employees only ever see orders they are assigned to.
+  const orders = isManager
+    ? allOrders
+    : allOrders.filter((o) => o.assignees.some((a) => a.id === userId))
 
   // Only orders assigned to the active planning period appear on the working board.
   const boardOrders = orders.filter((o) => (o.planningPeriodId ?? null) === periodId)

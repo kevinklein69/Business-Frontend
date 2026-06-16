@@ -22,7 +22,8 @@ const getClaims = (): Record<string, unknown> | null => {
 
   try {
     const payload = token.split('.')[1]
-    const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
+    const bytes = Uint8Array.from(atob(payload.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+    const json = new TextDecoder().decode(bytes)
     return JSON.parse(json) as Record<string, unknown>
   } catch {
     return null

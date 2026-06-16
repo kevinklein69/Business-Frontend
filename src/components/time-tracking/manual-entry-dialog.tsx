@@ -223,7 +223,7 @@ export function CreateManualEntryDialog() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger render={<Button variant="outline" />}>
+      <DialogTrigger render={<Button />}>
         <Plus className="size-4" /> Zeit manuell erfassen
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

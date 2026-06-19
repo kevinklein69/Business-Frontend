@@ -12,6 +12,16 @@ export function useEmployees() {
   })
 }
 
+export function useMyProfile() {
+  return useQuery({
+    queryKey: ['employees', 'me'],
+    queryFn: async () => {
+      const res = await apiClient.get<EmployeeDetail>('/api/employees/me')
+      return res.data
+    },
+  })
+}
+
 export function useEmployee(id: string | undefined) {
   return useQuery({
     queryKey: ['employees', id],
@@ -76,6 +86,17 @@ export function useUpdateEmployee() {
   return useMutation({
     mutationFn: async ({ id, ...input }: UpdateEmployeeInput) => {
       const res = await apiClient.put<Employee>(`/api/employees/${id}`, input)
+      return res.data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['employees'] }),
+  })
+}
+
+export function useUpdateEmployeeRole() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, role }: { id: string; role: Role }) => {
+      const res = await apiClient.patch<Employee>(`/api/employees/${id}/role`, { role })
       return res.data
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['employees'] }),

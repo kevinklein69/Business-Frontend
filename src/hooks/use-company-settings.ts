@@ -4,9 +4,12 @@ import type { GermanState } from '@/lib/holidays'
 
 export interface CompanySettings {
   state: GermanState
+  street: string
+  houseNumber: string
+  zip: string
+  city: string
 }
 
-/** Bundesland der Firma — bestimmt, welche Feiertage bei Urlaubsanträgen berücksichtigt werden. */
 export function useCompanySettings() {
   return useQuery({
     queryKey: ['company-settings'],
@@ -17,12 +20,12 @@ export function useCompanySettings() {
   })
 }
 
-/** Admin-only: ändert das Bundesland der Firma. */
+/** Admin-only: ändert Adresse und Bundesland der Firma. */
 export function useUpdateCompanySettings() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (state: GermanState) => {
-      const res = await apiClient.put<CompanySettings>('/api/company-settings', { state })
+    mutationFn: async (input: CompanySettings) => {
+      const res = await apiClient.put<CompanySettings>('/api/company-settings', input)
       return res.data
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['company-settings'] }),

@@ -80,7 +80,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       {/* Settings — separated at bottom */}
-      <div className="border-t border-sidebar-border px-2 py-3">
+      <div className="border-t border-sidebar-border px-2 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <Link
           href={settingsItem.href}
           onClick={onNavigate}
@@ -106,7 +106,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 export function Sidebar() {
   return (
     <aside className="hidden lg:flex w-56 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground h-full">
-      <div className="flex items-center h-14 px-4 border-b border-sidebar-border">
+      <div className="flex items-center h-[calc(3.5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] px-4 border-b border-sidebar-border">
         <Logo onDark markClassName="size-7" textClassName="text-base" />
       </div>
       <SidebarNav />
@@ -122,7 +122,7 @@ export function MobileSidebar({ open, onOpenChange }: { open: boolean; onOpenCha
         side="left"
         className="w-72 max-w-[80vw] gap-0 bg-sidebar text-sidebar-foreground p-0 [&>button]:text-sidebar-foreground [&>button]:hover:bg-sidebar-accent"
       >
-        <SheetHeader className="h-14 flex-row items-center border-b border-sidebar-border px-4 py-0">
+        <SheetHeader className="h-[calc(3.5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] flex-row items-center border-b border-sidebar-border px-4 py-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <Logo onDark markClassName="size-7" textClassName="text-base" />
         </SheetHeader>

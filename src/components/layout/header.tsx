@@ -52,7 +52,7 @@ export function Header() {
   }
 
   return (
-    <header className="h-14 border-b flex items-center justify-between gap-2 px-4 sm:px-6 bg-card shrink-0 shadow-[0_1px_6px_rgba(13,27,42,0.06)]">
+    <header className="h-[calc(3.5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] border-b flex items-center justify-between gap-2 px-4 sm:px-6 bg-card shrink-0 shadow-[0_1px_6px_rgba(13,27,42,0.06)]">
       <div className="flex items-center gap-2 min-w-0">
         <Button
           variant="ghost"

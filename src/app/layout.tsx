@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Toaster } from "sonner";
 import { Providers } from "./providers";
@@ -17,6 +17,14 @@ export const metadata: Metadata = {
   title: "Betrieb-App",
   description: "Betriebsverwaltung — Zeiterfassung, Aufträge, Urlaub",
   manifest: "/manifest.json",
+};
+
+// viewport-fit=cover lets the app draw under the iOS status bar / notch / home indicator,
+// so `env(safe-area-inset-*)` returns real values and our layout can pad around them.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

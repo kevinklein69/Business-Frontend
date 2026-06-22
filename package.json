@@ -9,10 +9,14 @@
     "lint": "eslint",
     "ios:sync": "next build && cap sync ios",
     "ios:run": "npm run ios:sync && bash scripts/ios-run.sh",
-    "ios:open": "cap open ios"
+    "ios:open": "cap open ios",
+    "android:sync": "next build && cap sync android",
+    "android:run": "npm run android:sync && cap run android",
+    "android:open": "cap open android"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
+    "@capacitor/android": "^8.4.1",
     "@capacitor/app": "^8.1.0",
     "@capacitor/cli": "^8.4.1",
     "@capacitor/core": "^8.4.1",

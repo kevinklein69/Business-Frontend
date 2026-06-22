@@ -1,7 +1,19 @@
 import axios from 'axios'
+import { Capacitor } from '@capacitor/core'
+
+function resolveBaseUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5228'
+  // The Android emulator can't reach the host machine via "localhost" — the host is
+  // mapped to the special address 10.0.2.2. iOS simulator and web reach localhost directly.
+  // (No effect once NEXT_PUBLIC_API_URL points at a real host/IP for device/production builds.)
+  if (Capacitor.getPlatform() === 'android') {
+    return configured.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2')
+  }
+  return configured
+}
 
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000',
+  baseURL: resolveBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },

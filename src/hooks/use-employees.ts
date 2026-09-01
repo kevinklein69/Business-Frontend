@@ -49,6 +49,7 @@ export interface CreateEmployeeInput {
   probationMonths?: number
   probationEndDate?: string
   vacationDaysEntitlement: number
+  initialBalanceMinutes?: number
 }
 
 export function useCreateEmployee() {
@@ -79,6 +80,7 @@ export interface UpdateEmployeeInput {
   probationMonths?: number
   probationEndDate?: string
   vacationDaysEntitlement: number
+  initialBalanceMinutes?: number
 }
 
 export function useUpdateEmployee() {

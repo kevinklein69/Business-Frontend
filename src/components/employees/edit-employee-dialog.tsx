@@ -46,6 +46,7 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
     probationMonths: employee.probationMonths != null ? String(employee.probationMonths) : '',
     probationEndDate: employee.probationEndDate ?? '',
     vacationDaysEntitlement: employee.vacationDaysEntitlement != null ? String(employee.vacationDaysEntitlement) : '30',
+    initialBalanceHours: employee.initialBalanceMinutes != null ? String(employee.initialBalanceMinutes / 60) : '0',
   })
   const [role, setRole] = useState<Role>(employee.role)
   const [probationEndTouched, setProbationEndTouched] = useState(false)
@@ -91,6 +92,9 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
         probationMonths: form.probationMonths.trim() ? Number(form.probationMonths) : undefined,
         probationEndDate: form.probationEndDate || undefined,
         vacationDaysEntitlement: Number(form.vacationDaysEntitlement),
+        initialBalanceMinutes: form.initialBalanceHours.trim()
+          ? Math.round(Number(form.initialBalanceHours) * 60)
+          : undefined,
       },
       {
         onSuccess: () => onClose(),
@@ -119,6 +123,9 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
     vacationDaysEntitlement: form.vacationDaysEntitlement.trim() && Number(form.vacationDaysEntitlement) >= 0
       ? null
       : 'Der Urlaubsanspruch muss 0 oder größer sein.',
+    initialBalanceHours: form.initialBalanceHours.trim() && Number.isNaN(Number(form.initialBalanceHours))
+      ? 'Bitte eine gültige Zahl eingeben.'
+      : null,
   }
   const canSubmit = !Object.values(fieldErrors).some(Boolean)
 
@@ -330,6 +337,32 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
                   <p className="text-sm text-destructive">{fieldErrors.vacationDaysEntitlement}</p>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Zeitkonto */}
+          <div className="flex flex-col gap-3 border-t pt-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Zeitkonto</p>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ee-initialBalanceHours">Anfangssaldo (Stunden)</Label>
+              <Input
+                id="ee-initialBalanceHours"
+                type="number"
+                step="0.5"
+                value={form.initialBalanceHours}
+                onChange={updateField('initialBalanceHours')}
+                onBlur={markTouched('initialBalanceHours')}
+                placeholder="0"
+                aria-invalid={showError('initialBalanceHours') && !!fieldErrors.initialBalanceHours}
+              />
+              <p className="text-xs text-muted-foreground">
+                Nur relevant, wenn aus einem Vorsystem ein bestehender Kontostand übernommen werden soll
+                (z.B. &bdquo;12,5&ldquo; für Überstunden, &bdquo;-8&ldquo; für Minusstunden). Das Eintrittsdatum
+                selbst beeinflusst den Kontostand nicht.
+              </p>
+              {showError('initialBalanceHours') && fieldErrors.initialBalanceHours && (
+                <p className="text-sm text-destructive">{fieldErrors.initialBalanceHours}</p>
+              )}
             </div>
           </div>
 

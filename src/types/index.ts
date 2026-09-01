@@ -21,6 +21,8 @@ export interface Employee extends User {
   probationEndDate?: string
   vacationDaysEntitlement?: number
   initialBalanceMinutes?: number
+  initialVacationDaysTaken?: number
+  initialVacationYear?: number
 }
 
 export interface EmployeeDetail extends Employee {

@@ -47,6 +47,7 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
     probationEndDate: employee.probationEndDate ?? '',
     vacationDaysEntitlement: employee.vacationDaysEntitlement != null ? String(employee.vacationDaysEntitlement) : '30',
     initialBalanceHours: employee.initialBalanceMinutes != null ? String(employee.initialBalanceMinutes / 60) : '0',
+    initialVacationDaysTaken: employee.initialVacationDaysTaken != null ? String(employee.initialVacationDaysTaken) : '0',
   })
   const [role, setRole] = useState<Role>(employee.role)
   const [probationEndTouched, setProbationEndTouched] = useState(false)
@@ -95,6 +96,9 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
         initialBalanceMinutes: form.initialBalanceHours.trim()
           ? Math.round(Number(form.initialBalanceHours) * 60)
           : undefined,
+        initialVacationDaysTaken: form.initialVacationDaysTaken.trim()
+          ? Number(form.initialVacationDaysTaken)
+          : undefined,
       },
       {
         onSuccess: () => onClose(),
@@ -125,6 +129,11 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
       : 'Der Urlaubsanspruch muss 0 oder größer sein.',
     initialBalanceHours: form.initialBalanceHours.trim() && Number.isNaN(Number(form.initialBalanceHours))
       ? 'Bitte eine gültige Zahl eingeben.'
+      : null,
+    initialVacationDaysTaken: form.initialVacationDaysTaken.trim() && (
+      Number.isNaN(Number(form.initialVacationDaysTaken)) || Number(form.initialVacationDaysTaken) < 0
+    )
+      ? 'Bitte eine gültige Zahl (0 oder größer) eingeben.'
       : null,
   }
   const canSubmit = !Object.values(fieldErrors).some(Boolean)
@@ -337,6 +346,27 @@ export function EditEmployeeDialog({ employee, onClose }: { employee: Employee; 
                   <p className="text-sm text-destructive">{fieldErrors.vacationDaysEntitlement}</p>
                 )}
               </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ee-initialVacationDaysTaken">Bereits genommene Urlaubstage (dieses Jahr)</Label>
+              <Input
+                id="ee-initialVacationDaysTaken"
+                type="number"
+                min={0}
+                step="0.5"
+                value={form.initialVacationDaysTaken}
+                onChange={updateField('initialVacationDaysTaken')}
+                onBlur={markTouched('initialVacationDaysTaken')}
+                placeholder="0"
+                aria-invalid={showError('initialVacationDaysTaken') && !!fieldErrors.initialVacationDaysTaken}
+              />
+              <p className="text-xs text-muted-foreground">
+                Nur relevant, wenn der Mitarbeiter dieses Jahr bereits vor dem Systemstart Urlaub genommen hat
+                (aus dem Vorsystem/manueller Erfassung) — wird vom Resturlaub abgezogen. Gilt nur für dieses Jahr.
+              </p>
+              {showError('initialVacationDaysTaken') && fieldErrors.initialVacationDaysTaken && (
+                <p className="text-sm text-destructive">{fieldErrors.initialVacationDaysTaken}</p>
+              )}
             </div>
           </div>
 
